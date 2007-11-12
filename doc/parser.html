@@ -1,0 +1,298 @@
+
+
+<html>
+<head>
+	<title>parser</title>
+	<link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+
+<div id="container">
+	
+<div id="product">
+	<p/>
+	<div id="product_logo">
+    	<a href="http://www.lua.org"> <img alt="Lua logo" src="lua.gif"/> </a>
+	</div>
+	<div id="product_name"><big><strong>parser</strong></big></div>
+	<div id="product_description"> Lua 5.1 parser </div>
+  <br/>
+  
+	<div id="product_description"> <small><em> <b>Version:</b> 0.1 </em></small></div> 
+    <div id="product_description"> <small><em><b>Generated:</b> November 09, 2007 </em></small> </div>
+  
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1><a href="init.html">Modules</a></h1>
+<ul>
+    <li><a href="grammar.html">grammar</a></li>
+    <li><a href="parser.html">parser</a></li>
+    <li><a href="scanner.html">scanner</a></li>
+  </ul>
+<br/>
+<h1>parser</h1>
+<ul>
+
+	<!--
+  <li><a href="#section_Description"> Description </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Description"> Description </a>
+		</li>
+
+	<!--
+  <li><a href="#section_Dependencies"> Dependencies </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Dependencies"> Dependencies </a>
+		</li>
+
+	<!--
+  <li><a href="#section_The_Grammar"> The Grammar </a>
+	
+	</li>
+  -->
+  <li><a href="#section_The_Grammar"> The Grammar </a>
+		</li>
+
+
+	<li><a href="#variables"> Variables </a>
+		<ul>
+		
+			<li><code><a href="#variable_rules"> rules </a></code></li>
+		
+		</ul>
+	</li>
+
+
+	<li><a href="#functions"> Functions </a>
+		<ul>
+		
+			<li><code><a href="#function_check"> check </a></code></li>
+		
+			<li><code><a href="#function_apply"> apply </a></code></li>
+		
+		</ul>
+	</li>
+
+
+</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+
+
+<p/>
+
+
+<p/>
+<h1><a name="section_Description"></a>Description</h1>
+<p/>
+Pairing with <a href="scanner.html">scanner</a>, this module exports Lua 5.1's syntactic rules as a grammar.
+<p/>
+<h1><a name="section_Dependencies"></a>Dependencies</h1>
+<ul>
+<li><a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a>; </li>
+<li><a href="grammar.html">grammar</a>; and </li>
+<li><a href="scanner.html">scanner</a>.</li></ul>
+<p/>
+<h1><a name="section_The_Grammar"></a>The Grammar</h1>
+<p/>
+The <a href="#variable_rules">rules</a> variable implements the official <a href="http://www.lua.org/manual/5.1/manual.html#8">Lua 5.1 grammar</a>. It includes all keyword and symbol rules in <a href="scanner.html">scanner</a>, as well as the <code>CHUNK</code> rule, which matches a complete Lua source file.
+<p/>
+<a href="#variable_rules">rules</a> is a table with <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#grammar">open references</a>, not yet a LPeg pattern; to create a pattern, it must be given to <code><a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg">lpeg.P</a></code>. This is done to enable users to modify the grammar to suit their particular needs. <a href="grammar.html">grammar</a> provides a small API for this purpose.
+<p/>
+The code below shows the Lua 5.1 grammar in LPeg, minus spacing issues.
+<p/>
+The following convention is used for rule names:<ul>
+<li><strong>TOKENRULE</strong>: token rules (which represent terminals) are in upper case when applicable (ex. <code>+, WHILE, NIL, ..., THEN, {, ==</code>).</li>
+<li><strong>GrammarRule</strong>: the main grammar rules (non-terminals): Examples are <code>Chunk</code>, <code>FuncName</code>, <code>BinOp</code>, and <code>TableConstructor</code>.</li>
+<li><strong>_GrammarRule</strong>: subdivisions of the main rules, introduced to ease captures. Examples are <code>_SimpleExp</code>, <code>_PrefixExpParens</code> and <code>_FieldExp</code>.</li>
+<li><strong>METARULE</strong>: grammar rules with a special semantic meaning, to be used for capturing in later modules, like <code>BOF</code>, <code>EOF</code> and <code>EPSILON</code>.</li></ul>
+<p/>
+<pre class="example">
+rules = {
+  <font color="#808080"> -- See peculiarities below</font>
+   IGNORED  = scanner.IGNORED <font color="#808080"> -- used as spacing, not depicted below</font>
+   EPSILON = lpeg.P(<font color="#0000FF"><b>true</b></font>)
+   EOF     = scanner.EOF <font color="#808080"> -- end of file</font>
+   BOF     = scanner.BOF <font color="#808080"> -- beginning of file</font>
+   Name    = ID
+
+  <font color="#808080"> -- Default initial rule</font>
+   [<font color="#B00000"><i>1</i></font>]     = CHUNK
+   CHUNK   = scanner.BANG^-<font color="#B00000"><i>1</i></font> * Block
+
+   Chunk   = (Stat * <font color="#008000">';'</font>^-<font color="#B00000"><i>1</i></font>)^<font color="#B00000"><i>0</i></font> * (LastStat * <font color="#008000">';'</font>^-<font color="#B00000"><i>1</i></font>)^-<font color="#B00000"><i>1</i></font>
+   Block   = Chunk
+
+  <font color="#808080"> -- STATEMENTS</font>
+   Stat          = Assign + FunctionCall + Do + While + Repeat + If
+                 + NumericFor + GenericFor + GlobalFunction + LocalFunction
+                 + LocalAssign
+   Assign        = VarList * <font color="#008000">'='</font> * ExpList
+   Do            = <font color="#008000">'do'</font> * Block * <font color="#008000">'end'</font>
+   While         = <font color="#008000">'while'</font> * Exp * <font color="#008000">'do'</font> * Block * <font color="#008000">'end'</font>
+   Repeat        = <font color="#008000">'repeat'</font> * Block * <font color="#008000">'until'</font> * Exp
+   If            = <font color="#008000">'if'</font> * Exp * <font color="#008000">'then'</font> * Block
+                     * (<font color="#008000">'elseif'</font> * Exp * <font color="#008000">'then'</font> * Block)^<font color="#B00000"><i>0</i></font>
+                     * ((<font color="#008000">'else'</font> * Block) + EPSILON)
+                     * <font color="#008000">'end'</font>
+   NumericFor    = <font color="#008000">'for'</font> * Name * <font color="#008000">'='</font>
+                     * Exp * <font color="#008000">','</font> * Exp * ((<font color="#008000">','</font> * Exp) + EPSILON)
+                     * <font color="#008000">'do'</font> * Block * <font color="#008000">'end'</font>
+   GenericFor    = <font color="#008000">'for'</font> * NameList * <font color="#008000">'in'</font> * ExpList * <font color="#008000">'do'</font> * Block * <font color="#008000">'end'</font>
+   GlobalFunction = <font color="#008000">'function'</font> * FuncName * FuncBody
+   LocalFunction = <font color="#008000">'local'</font> * <font color="#008000">'function'</font> * Name * FuncBody
+   LocalAssign   = <font color="#008000">'local'</font> * NameList * (<font color="#008000">'='</font> * ExpList)^-<font color="#B00000"><i>1</i></font>
+   LastStat      = <font color="#008000">'return'</font> * ExpList^-<font color="#B00000"><i>1</i></font>
+                 + <font color="#008000">'break'</font>
+
+  <font color="#808080"> -- LISTS</font>
+   VarList  = Var * (<font color="#008000">','</font> * Var)^<font color="#B00000"><i>0</i></font>
+   NameList = Name * (<font color="#008000">','</font> * Name)^<font color="#B00000"><i>0</i></font>
+   ExpList  = Exp * (<font color="#008000">','</font> * Exp)^<font color="#B00000"><i>0</i></font>
+
+  <font color="#808080"> -- EXPRESSIONS</font>
+   Exp          = _SimpleExp * (BinOp * _SimpleExp)^<font color="#B00000"><i>0</i></font>
+   _SimpleExp   = <font color="#008000">'nil'</font> + <font color="#008000">'false'</font> + <font color="#008000">'true'</font> + Number + String + <font color="#008000">'...'</font> + Function
+                + _PrefixExp + TableConstructor + (UnOp * _SimpleExp)
+   _PrefixExp   = ( Name                  a Var
+                  + _PrefixExpParens      only an expression
+                  ) * (
+                      _PrefixExpSquare    a Var
+                    + _PrefixExpDot       a Var
+                    + _PrefixExpArgs      a FunctionCall
+                    + _PrefixExpColon     a FunctionCall
+                  ) ^ <font color="#B00000"><i>0</i></font>
+
+  <font color="#808080"> -- Extra rules for semantic actions:</font>
+   _PrefixExpParens = <font color="#008000">'('</font> * Exp * <font color="#008000">')'</font>
+   _PrefixExpSquare = <font color="#008000">'['</font> * Exp * <font color="#008000">']'</font>
+   _PrefixExpDot    = <font color="#008000">'.'</font> * ID
+   _PrefixExpArgs   = Args
+   _PrefixExpColon  = <font color="#008000">':'</font> * ID * _PrefixExpArgs
+
+  <font color="#808080"> -- These rules use an internal trick to be distingished from _PrefixExp</font>
+   Var              = _PrefixExp
+   FunctionCall     = _PrefixExp
+
+  <font color="#808080"> -- FUNCTIONS</font>
+   Function     = <font color="#008000">'function'</font> * FuncBody
+   FuncBody     = <font color="#008000">'('</font> * (ParList+EPSILON) * <font color="#008000">')'</font> * Block * <font color="#008000">'end'</font>
+   FuncName     = Name * _PrefixExpDot^<font color="#B00000"><i>0</i></font> * ((<font color="#008000">':'</font> * ID)+EPSILON)
+   Args         = <font color="#008000">'('</font> * (ExpList+EPSILON) * <font color="#008000">')'</font>
+                + TableConstructor + String
+   ParList      = NameList * (<font color="#008000">','</font> * <font color="#008000">'...'</font>)^-<font color="#B00000"><i>1</i></font>
+                + <font color="#008000">'...'</font>
+
+  <font color="#808080"> -- TABLES</font>
+   TableConstructor = <font color="#008000">'{'</font> * (FieldList+EPSILON) * <font color="#008000">'}'</font>
+   FieldList        = Field * (FieldSep * Field)^<font color="#B00000"><i>0</i></font> * FieldSep^-<font color="#B00000"><i>1</i></font>
+   FieldSep         = <font color="#008000">','</font> + <font color="#008000">';'</font>
+
+  <font color="#808080"> -- Extra rules for semantic actions:</font>
+   _FieldSquare     = <font color="#008000">'['</font> * Exp * <font color="#008000">']'</font> * <font color="#008000">'='</font> * Exp
+   _FieldID         = ID * <font color="#008000">'='</font> * Exp
+   _FieldExp        = Exp
+
+  <font color="#808080"> -- OPERATORS</font>
+   BinOp    = <font color="#008000">'+'</font> + <font color="#008000">'-'</font> + <font color="#008000">'*'</font> + <font color="#008000">'/'</font> + <font color="#008000">'^'</font> + <font color="#008000">'%'</font> + <font color="#008000">'..'</font>
+            + <font color="#008000">'&lt;'</font> + <font color="#008000">'&lt;='</font> + <font color="#008000">'&gt;'</font> + <font color="#008000">'&gt;='</font> + <font color="#008000">'=='</font> + <font color="#008000">'~='</font>
+            + <font color="#008000">'and'</font> + <font color="#008000">'or'</font>
+   UnOp     = <font color="#008000">'-'</font> + <font color="#008000">'not'</font> + <font color="#008000">'#'</font>
+
+  <font color="#808080"> -- ...plus scanner's keywords and symbols</font>
+}
+</pre>
+<p/>
+The implementation has certain peculiarities that merit clarification:
+<ul>
+<li>Spacing is matched only between two tokens in a rule, never at the beginning or the end of a rule.</li></ul>
+<ul>
+<li><code>EPSILON</code> matches the empty string, which means that it always succeeds without consuming input. Although <code>rule + EPSILON</code> can be changed to <code>rule^-1</code> without any loss of syntactic power, <code>EPSILON</code> was introduced in the parser due to it's usefulness as a placeholder for captures.</li></ul>
+<ul>
+<li><code>BOF</code> and <code>EOF</code> are rules used to mark the bounds of a parsing match, and are useful for semantic actions.</li></ul>
+<ul>
+<li><code>Name</code> versus <code>ID</code>: the official Lua grammar doesn't distinguish between them, as their syntax is exactly the same (Lua identifiers). But semantically <code>Name</code> is a variable identifier, and <code>ID</code> is used with different meanings in <code>_FieldID</code>, <code>FuncName</code>, <code>_PrefixExpColon</code> and <code>_PrefixExpDot</code>.</li></ul>
+<ul>
+<li>In Lua's <a href="http://www.lua.org/manual/5.1/manual.html#8">original extended BNF grammar</a>, <code>Var</code> and <code>FunctionCall</code> are defined using left recursion, which is unavailable in PEGs. In this implementation, the problem was solved by modifying the PEG rules to eliminate the left recursion, and by setting some markers (with some LPeg chicanery) to ensure the proper pattern is being used.</li></ul>
+<p/>
+<p/>
+
+
+
+<hr/>
+<h1><a name="variables"></a> Variables </h1>
+	<table border="0" width="95%">
+	
+		<tr>
+			<a name="variable_rules"></a>
+			<td> <pre class="example"><big><strong>rules</strong></big> = <small>table</small> </pre> </td>
+			<td> <br/>
+A table holding the Lua 5.1 grammar. See <a href="#section_The_Grammar">The Grammar</a> for an extended explanation.
+<p/>
+ </td>
+		</tr>
+	
+	</table>
+
+
+
+<hr/>
+<h1><a name="functions"></a> Functions </h1>
+	<table border="0" width="95%">
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_check">check</a></strong></big> (input)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_check">check</a></strong></big> (input) </code> </td>
+			<td> Checks if <code>input</code> is valid Lua source code. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_apply">apply</a></strong></big> (extraRules, captures)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_apply">apply</a></strong></big> (extraRules, captures) </code> </td>
+			<td> Uses <a href="grammar.html#function_apply">grammar.apply</a> to return a new grammar, with <code>captures</code> and extra rules. <a href="#variable_rules">rules</a> stays unmodified. </td>
+		</tr>
+	
+	</table>
+
+	
+		<p/><a name="function_check"></a>
+		<hr/><code><big>check (input)</big></code>
+		<ul>Checks if <code>input</code> is valid Lua source code.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>input</code>: a string containing Lua source code.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>true</code>, if <code>input</code> is valid Lua source code, or <code>false</code> and an error message if the matching fails.</li></ul></ul>
+	
+		<p/><a name="function_apply"></a>
+		<hr/><code><big>apply (extraRules, captures)</big></code>
+		<ul>Uses <a href="grammar.html#function_apply">grammar.apply</a> to return a new grammar, with <code>captures</code> and extra rules. <a href="#variable_rules">rules</a> stays unmodified.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>extraRules</code>: optional, the new and modified rules. See <a href="grammar.html#function_apply">grammar.apply</a> for the accepted format.</li>
+<li><code>captures</code>: optional, the desired captures. See <a href="grammar.html#function_apply">grammar.apply</a> for the accepted format.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the extended grammar.</li></ul></ul>
+	
+	<hr/>
+
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html> 

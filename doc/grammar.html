@@ -1,0 +1,402 @@
+
+
+<html>
+<head>
+	<title>grammar</title>
+	<link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+
+<div id="container">
+	
+<div id="product">
+	<p/>
+	<div id="product_logo">
+    	<a href="http://www.lua.org"> <img alt="Lua logo" src="lua.gif"/> </a>
+	</div>
+	<div id="product_name"><big><strong>grammar</strong></big></div>
+	<div id="product_description"> LPeg grammar manipulation </div>
+  <br/>
+  
+	<div id="product_description"> <small><em> <b>Version:</b> 0.1 </em></small></div> 
+    <div id="product_description"> <small><em><b>Generated:</b> November 09, 2007 </em></small> </div>
+  
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1><a href="init.html">Modules</a></h1>
+<ul>
+    <li><a href="grammar.html">grammar</a></li>
+    <li><a href="parser.html">parser</a></li>
+    <li><a href="scanner.html">scanner</a></li>
+  </ul>
+<br/>
+<h1>grammar</h1>
+<ul>
+
+	<!--
+  <li><a href="#section_Description"> Description </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Description"> Description </a>
+		</li>
+
+	<!--
+  <li><a href="#section_Dependencies"> Dependencies </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Dependencies"> Dependencies </a>
+		</li>
+
+	<!--
+  <li><a href="#section_Operations"> Operations </a>
+	
+		<ul>
+		
+			<li><a href="#section_Operations_Piping"> Piping </a></li>
+		
+			<li><a href="#section_Operations_Completing"> Completing </a></li>
+		
+			<li><a href="#section_Operations_Applying"> Applying </a></li>
+		
+			<li><a href="#section_Operations_Example"> Example </a></li>
+		
+		</ul>
+	
+	</li>
+  -->
+  <li><a href="#section_Operations"> Operations </a>
+			<ul>
+					<li><a href="#section_Piping"> Piping </a></li>
+					<li><a href="#section_Completing"> Completing </a></li>
+					<li><a href="#section_Applying"> Applying </a></li>
+					<li><a href="#section_Example"> Example </a></li>
+				</ul>
+		</li>
+
+
+
+	<li><a href="#functions"> Functions </a>
+		<ul>
+		
+			<li><code><a href="#function_C"> C </a></code></li>
+		
+			<li><code><a href="#function_Ct"> Ct </a></code></li>
+		
+			<li><code><a href="#function_copy"> copy </a></code></li>
+		
+			<li><code><a href="#function_complete"> complete </a></code></li>
+		
+			<li><code><a href="#function_pipe"> pipe </a></code></li>
+		
+			<li><code><a href="#function_apply"> apply </a></code></li>
+		
+		</ul>
+	</li>
+
+
+</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+
+
+<p/>
+
+
+<p/>
+<h1><a name="section_Description"></a>Description</h1>
+<p/>
+This module defines a handful of operations which can be applied to 
+<a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> grammars in general.
+<p/>
+<h1><a name="section_Dependencies"></a>Dependencies</h1>
+<ul>
+<li><a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a>.</li></ul>
+<p/>
+<h1><a name="section_Operations"></a>Operations</h1>
+<p/>
+<h2><a name="section_Piping"></a>Piping</h2>
+<p/>
+Pattern matching dissociates the notion of <em>matching</em> from the notion of 
+<em>capturing</em>: matching checks if a given string follows a certain pattern, 
+and capturing generates values according to the match made. This division 
+allows interesting possibilities:
+<ul>
+<li>different problems can be solved by applying different captures to the same grammar;</li>
+<li>captures may be defined separately;</li>
+<li>captures may be done on top of other captures.</li></ul>
+<p/>
+Accounting for the first and second bullets, the grammar given in 
+<a href="parser.html">parser</a> has no captures, enabling the user to reuse it to solve any 
+problems that require a Lua grammar. One good example is documentation 
+generation, described in a little more detail <a href="#section_Example">below</a>.
+<p/>
+The third bullet depicts a more interesting idea: a capture might take the 
+result of another capture as input, doing a further transformation of the 
+original data. This capture chaining, with the latter ones using the former's 
+output as its input, is very similar to <a href="http://en.wikipedia.org/wiki/Pipeline_%28Unix%29">Unix pipelines</a>, 
+so this mechanism was named <strong>piping</strong>.
+<p/>
+<h2><a name="section_Completing"></a>Completing</h2>
+<p/>
+With piping, several levels of captures can be chained together up to the 
+most appropriate for the task at hand. Yet some levels might require extra rules, and modifications to existing ones, to ensure proper matching. 
+<p/>
+To avoid manual copying, the new grammar should redefine only the necessary 
+rules, copying the rest from the older grammar. This action is dubbed 
+<strong>completing</strong>.
+<p/>
+<h2><a name="section_Applying"></a>Applying</h2>
+<p/>
+Once a new rule set is created and <a href="#section_Completing">completed</a>, and 
+all captures are correctly <a href="#section_Piping">piped</a>, all that's left is 
+to put them together, a process called <strong>applying</strong>. The result is a grammar ready for <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg">lpeg.P</a> 
+consumption, whose pattern will return the intended result when a match is made.
+<p/>
+<h2><a name="section_Example"></a>Example</h2>
+<p/>
+Let's consider the problem of documenting a Lua module. In this case, comments 
+must be captured before every function declaration when in the outermost scope:
+<p/>
+<pre class="example">
+<font color="#808080"> -- the code to parse</font>
+subject = <font color="#008000">[[
+ -- Calculates the sum a+b. 
+ -- An extra line.
+ function sum (a, b)
+ -- code
+ end
+
+ -- f1: assume a variable assignment is not a proper declaration for an 
+ -- exported function
+ f1 = function ()
+ -- code
+ end
+
+ while true do
+   -- this function is not in the outermost scope
+   function aux() end
+ end
+ 
+ function something:other(a, ...)
+   -- a global function without comments
+ end
+]]</font>
+</pre>
+<p/>
+In the code above only <code>sum</code> and <code>something:other</code> should be documented, as <code>f1</code> isn't properly (by our standards) declared and <code>aux</code> is not in the outermost scope. 
+<p/>
+By combining <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> and the modules <a href="scanner.html">scanner</a>, <a href="parser.html">parser</a> and <a href="grammar.html">grammar</a>, this specific problem can be solved as follows:
+<p/>
+<pre class="example">
+<font color="#808080"> -- change only the initial rule and make no captures</font>
+patt = grammar.apply(parser.rules, scanner.COMMENT^-<font color="#B00000"><i>1</i></font> * lpeg.V<font color="#008000">'GlobalFunction'</font>, <font color="#0000FF"><b>nil</b></font>)
+
+<font color="#808080"> -- transform the new grammar into a LPeg pattern</font>
+patt = lpeg.P(patt)
+
+<font color="#808080"> -- making a pattern that matches any Lua statement, also without captures</font>
+Stat = lpeg.P( grammar.apply(parser.rules, lpeg.V<font color="#008000">'Stat'</font>, <font color="#0000FF"><b>nil</b></font>) )
+
+<font color="#808080"> -- a pattern which matches function declarations and skips statements in</font>
+<font color="#808080"> -- inner scopes or undesired tokens</font>
+patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font>
+
+<font color="#808080"> -- matching a string</font>
+patt:match(subject)
+</pre>
+<p/>
+These are the relevant rules in <a href="parser.html#section_The_Grammar">the grammar</a>:
+<p/>
+<pre class="example">
+GlobalFunction = <font color="#008000">'function'</font> * FuncName * FuncBody
+FuncName     = ID * (<font color="#008000">'.'</font> * ID)^<font color="#B00000"><i>0</i></font> * (<font color="#008000">':'</font> * ID)^-<font color="#B00000"><i>1</i></font>
+FuncBody     = <font color="#008000">'('</font> * (ParList + EPSILON) * <font color="#008000">')'</font> * Block * <font color="#008000">'end'</font>
+ParList      = NameList * (<font color="#008000">','</font> * <font color="#008000">'...'</font>)^-<font color="#B00000"><i>1</i></font>
+NameList     = ID * (<font color="#008000">','</font> * ID)^<font color="#B00000"><i>0</i></font>
+ID           = scanner.ID
+EPSILON      = lpeg.P(<font color="#0000FF"><b>true</b></font>)
+</pre>
+<p/>
+It may seem that <code>ParList + EPSILON</code> could be substituted for <code>ParList^-1</code> (optionally match <code>ParList</code>), but then no captures would be made for empty parameter lists, and <code>GlobalFunction</code> would get all strings matched by <code>FuncBody</code>. The <code>EPSILON</code> rule acts in this manner as a placeholder in the argument list, avoiding any argument list processing in the capture function.
+<p/>
+Since no captures are being made, <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#basic">lpeg.match</a> doesn't return anything interesting. Here are some possible captures:
+<p/>
+<pre class="example">
+<font color="#808080"> -- some interesting captures bundled up in a table. Note that the table keys</font>
+<font color="#808080"> -- match the grammar rules we want to add captures to. Whatever rules aren't in</font>
+<font color="#808080"> -- the rules table below will come from parser.rules .</font>
+captures = {
+ [<font color="#B00000"><i>1</i></font>] = <font color="#0000FF"><b>function</b></font> (...) <font color="#808080"> -- the initial rule</font>
+   <font color="#0000FF"><b>return</b></font> <font color="#008000">'&lt;function&gt;'</font>..table.concat{...}..<font color="#008000">'&lt;/function&gt;'</font> 
+ <font color="#0000FF"><b>end</b></font>,
+ 
+ GlobalFunction = <font color="#0000FF"><b>function</b></font> (name, parlist)
+   <font color="#0000FF"><b>return</b></font> <font color="#008000">'&lt;name&gt;'</font>..name..<font color="#008000">'&lt;/name&gt;&lt;parlist&gt;'</font>..(parlist <font color="#0000FF"><b>or</b></font> <font color="#008000">''</font>)..<font color="#008000">'&lt;/parlist&gt;'</font> 
+ <font color="#0000FF"><b>end</b></font>,
+ 
+ FuncName = grammar.C, <font color="#808080"> -- capture the raw text</font>
+ ParList  = grammar.C, <font color="#808080"> -- capture the raw text</font>
+ COMMENT  = scanner.comment2text, <font color="#808080"> -- remove the comment trappings</font>
+}
+
+<font color="#808080"> -- spacing rule</font>
+<font color="#0000FF"><b>local</b></font> S = scanner.SPACE ^ <font color="#B00000"><i>0</i></font>
+
+<font color="#808080"> -- rules table</font>
+rules = {
+ [<font color="#B00000"><i>1</i></font>]     = ((lpeg.V<font color="#008000">'COMMENT'</font> *S) ^ <font color="#B00000"><i>0</i></font>) *S* lpeg.V<font color="#008000">'GlobalFunction'</font>,
+ COMMENT = scanner.COMMENT,
+}
+
+<font color="#808080"> -- building the new grammar and adding the captures</font>
+patt = lpeg.P( grammar.apply(parser.rules, rules, captures) )
+
+<font color="#808080"> -- a pattern that matches a sequence of patts and concatenates the results</font>
+patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font> / <font color="#0000FF"><b>function</b></font>(...) 
+ <font color="#0000FF"><b>return</b></font> table.concat({...}, <font color="#008000">'\n\n'</font>) <font color="#808080"> -- some line breaks for easier reading</font>
+<font color="#0000FF"><b>end</b></font>
+
+<font color="#808080"> -- finally, matching a string</font>
+print(patt:match(subject))
+</pre>
+<p/>
+<code>FuncBody</code> needs no captures, as <code>Block</code> and all its non-terminals have none; it 
+just needs to pass along any captures made by <code>ParList</code>. <code>NameList</code> and <code>ID</code> also have no captures, and the whole subject string is passed further.
+<p/>
+The printed result is:
+<pre class="example">
+&lt;function&gt;Calculates the sum a+b. An extra line.&lt;name&gt;sum&lt;/name&gt;&lt;parlist&gt;a, b&lt;/parlist&gt;&lt;/function&gt;
+<br/>
+&lt;function&gt;&lt;name&gt;something:other&lt;/name&gt;&lt;parlist&gt;a, ...&lt;/parlist&gt;&lt;/function&gt;
+</pre>
+<p/>
+<p/>
+
+
+
+
+
+<hr/>
+<h1><a name="functions"></a> Functions </h1>
+	<table border="0" width="95%">
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_C">C</a></strong></big> ()</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_C">C</a></strong></big> () </code> </td>
+			<td> A capture function, so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_Ct">Ct</a></strong></big> ()</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_Ct">Ct</a></strong></big> () </code> </td>
+			<td> A capture function, so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_copy">copy</a></strong></big> (grammar)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_copy">copy</a></strong></big> (grammar) </code> </td>
+			<td> Creates a shallow copy of <code>grammar</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_complete">complete</a></strong></big> (dest, orig)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_complete">complete</a></strong></big> (dest, orig) </code> </td>
+			<td> <a href="#section_Completing">Completes</a> <code>dest</code> with <code>orig</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_pipe">pipe</a></strong></big> (dest, orig)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_pipe">pipe</a></strong></big> (dest, orig) </code> </td>
+			<td> <a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_apply">apply</a></strong></big> (grammar, rules, captures)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_apply">apply</a></strong></big> (grammar, rules, captures) </code> </td>
+			<td> <a href="#section_Completing">Completes</a> <code>rules</code> with <code>grammar</code> and then <a href="#Applying">applies</a> <code>captures</code>.      </td>
+		</tr>
+	
+	</table>
+
+	
+		<p/><a name="function_C"></a>
+		<hr/><code><big>C ()</big></code>
+		<ul>A capture function, so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>.</ul>
+	
+		<p/><a name="function_Ct"></a>
+		<hr/><code><big>Ct ()</big></code>
+		<ul>A capture function, so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>.</ul>
+	
+		<p/><a name="function_copy"></a>
+		<hr/><code><big>copy (grammar)</big></code>
+		<ul>Creates a shallow copy of <code>grammar</code>.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>grammar</code>: a regular table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a newly created table, with <code>grammar</code>'s keys and values.</li></ul></ul>
+	
+		<p/><a name="function_complete"></a>
+		<hr/><code><big>complete (dest, orig)</big></code>
+		<ul><a href="#section_Completing">Completes</a> <code>dest</code> with <code>orig</code>.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>dest</code>: the new grammar. Must be a table.</li>
+<li><code>orig</code>: the original grammar. Must be a table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>dest</code>, with new rules inherited from <code>orig</code>.</li></ul></ul>
+	
+		<p/><a name="function_pipe"></a>
+		<hr/><code><big>pipe (dest, orig)</big></code>
+		<ul><a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>.
+<p/>
+<code>dest</code> and <code>orig</code> should be tables, with each key storing a capture function. Each capture in <code>dest</code> will be altered to use the results for the matching one in <code>orig</code> as input, using function composition. Should <code>orig</code> possess keys not in <code>dest</code>, <code>dest</code> will copy them.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>dest</code>: a capture table.</li>
+<li><code>orig</code>: a capture table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>dest</code>, suitably modified.</li></ul></ul>
+	
+		<p/><a name="function_apply"></a>
+		<hr/><code><big>apply (grammar, rules, captures)</big></code>
+		<ul><a href="#section_Completing">Completes</a> <code>rules</code> with <code>grammar</code> and then <a href="#Applying">applies</a> <code>captures</code>.     
+<p/>
+<code>rules</code> can either be:<ul>
+<li>a single pattern, which is taken to be the new initial rule, </li>
+<li>a possibly incomplete LPeg grammar, as per <a href="#function_complete">complete</a>, or </li>
+<li><code>nil</code>, which means no new rules are added.</li></ul>
+<p/>
+<code>captures</code> can either be:<ul>
+<li>a capture table, as per <a href="#function_pipe">pipe</a>, or</li>
+<li><code>nil</code>, which means no captures are applied.</li></ul>
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>grammar</code>: the old grammar. It stays unmodified.</li>
+<li><code>rules</code>: optional, the new rules. </li>
+<li><code>captures</code>: optional, the final capture table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the new grammar.</li></ul></ul>
+	
+	<hr/>
+
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html> 

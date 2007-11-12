@@ -1,0 +1,402 @@
+
+
+<html>
+<head>
+	<title>scanner</title>
+	<link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+
+<div id="container">
+	
+<div id="product">
+	<p/>
+	<div id="product_logo">
+    	<a href="http://www.lua.org"> <img alt="Lua logo" src="lua.gif"/> </a>
+	</div>
+	<div id="product_name"><big><strong>scanner</strong></big></div>
+	<div id="product_description"> Lua 5.1 lexical patterns </div>
+  <br/>
+  
+	<div id="product_description"> <small><em> <b>Version:</b> 0.1 </em></small></div> 
+    <div id="product_description"> <small><em><b>Generated:</b> November 09, 2007 </em></small> </div>
+  
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1><a href="init.html">Modules</a></h1>
+<ul>
+    <li><a href="grammar.html">grammar</a></li>
+    <li><a href="parser.html">parser</a></li>
+    <li><a href="scanner.html">scanner</a></li>
+  </ul>
+<br/>
+<h1>scanner</h1>
+<ul>
+
+	<!--
+  <li><a href="#section_Description"> Description </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Description"> Description </a>
+		</li>
+
+	<!--
+  <li><a href="#section_Dependencies"> Dependencies </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Dependencies"> Dependencies </a>
+		</li>
+
+	<!--
+  <li><a href="#section_Example"> Example </a>
+	
+	</li>
+  -->
+  <li><a href="#section_Example"> Example </a>
+		</li>
+
+
+	<li><a href="#variables"> Variables </a>
+		<ul>
+		
+			<li><code><a href="#variable_keywords"> keywords </a></code></li>
+		
+			<li><code><a href="#variable_symbols"> symbols </a></code></li>
+		
+			<li><code><a href="#variable_KEYWORD"> KEYWORD </a></code></li>
+		
+			<li><code><a href="#variable_SYMBOL"> SYMBOL </a></code></li>
+		
+			<li><code><a href="#variable_IDENTIFIER"> IDENTIFIER </a></code></li>
+		
+			<li><code><a href="#variable_NUMBER"> NUMBER </a></code></li>
+		
+			<li><code><a href="#variable_STRING"> STRING </a></code></li>
+		
+			<li><code><a href="#variable_COMMENT"> COMMENT </a></code></li>
+		
+			<li><code><a href="#variable_SPACE"> SPACE </a></code></li>
+		
+			<li><code><a href="#variable_IGNORED"> IGNORED </a></code></li>
+		
+			<li><code><a href="#variable_TOKEN"> TOKEN </a></code></li>
+		
+			<li><code><a href="#variable_ANY"> ANY </a></code></li>
+		
+			<li><code><a href="#variable_BOF"> BOF </a></code></li>
+		
+			<li><code><a href="#variable_EOF"> EOF </a></code></li>
+		
+			<li><code><a href="#variable_BANG"> BANG </a></code></li>
+		
+		</ul>
+	</li>
+
+
+	<li><a href="#functions"> Functions </a>
+		<ul>
+		
+			<li><code><a href="#function_error"> error </a></code></li>
+		
+			<li><code><a href="#function_comment2text"> comment2text </a></code></li>
+		
+			<li><code><a href="#function_text2comment"> text2comment </a></code></li>
+		
+			<li><code><a href="#function_string2text"> string2text </a></code></li>
+		
+			<li><code><a href="#function_text2string"> text2string </a></code></li>
+		
+		</ul>
+	</li>
+
+
+</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+
+
+<p/>
+
+
+<p/>
+<h1><a name="section_Description"></a>Description</h1>
+<p/>
+This module exports several Lua lexical patterns, all implemented in <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a>. None of them have captures.
+<p/>
+<h1><a name="section_Dependencies"></a>Dependencies</h1>
+<ul>
+<li><a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a></li></ul>
+<p/>
+<h1><a name="section_Example"></a>Example</h1>
+<p/>
+The following example lists all the tokens in a Lua script:
+<p/>
+<pre class="example">
+<font color="#0000FF"><b>local</b></font> lpeg = require <font color="#008000">'lpeg'</font>
+<font color="#0000FF"><b>local</b></font> scanner = require <font color="#008000">'leg.scanner'</font>
+
+<font color="#808080"> -- this pattern captures all tokens, ignores spaces and comments,</font>
+<font color="#808080"> -- and matches with end of file, giving an error otherwise</font>
+patt = (lpeg.C(scanner.TOKEN) + scanner.SPACE + scanner.COMMENT)^<font color="#B00000"><i>0</i></font>
+    * (scanner.EOF + scanner.error<font color="#008000">'invalid character'</font>)
+patt = lpeg.Ct(patt)
+
+<font color="#808080"> -- opens the file passed as parameter and tries to match with patt</font>
+f = assert(io.open(arg[<font color="#B00000"><i>1</i></font>]))
+
+<font color="#808080"> -- a table storing all the tokens</font>
+ALL = patt:match(f:read<font color="#008000">'*a'</font>)
+f:close()
+
+<font color="#808080"> -- dumps all tokens on screen</font>
+<font color="#0000FF"><b>for</b></font> _, tk <font color="#0000FF"><b>in</b></font> ipairs(ALL) <font color="#0000FF"><b>do</b></font>
+   print(tk)
+<font color="#0000FF"><b>end</b></font>
+</pre>
+<p/>
+<p/>
+
+
+
+<hr/>
+<h1><a name="variables"></a> Variables </h1>
+	<table border="0" width="95%">
+	
+		<tr>
+			<a name="variable_keywords"></a>
+			<td> <pre class="example"><big><strong>keywords</strong></big> = <small>{}</small> </pre> </td>
+			<td> <br/>
+A table with Lua keyword-matching patterns, with the keywords in uppercase 
+as keys.
+<p/>
+Examples: <code>keywords.WHILE</code>, <code>keywords['ELSEIF']</code>.
+<p/>
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_symbols"></a>
+			<td> <pre class="example"><big><strong>symbols</strong></big> = <small>{}</small> </pre> </td>
+			<td> <br/>
+A table with Lua symbol-matching patterns, with the symbols themselves as 
+keys.
+<p/>
+Examples: <code>symbols['{']</code>, <code>symbols['+']</code>.
+<p/>
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_KEYWORD"></a>
+			<td> <pre class="example"><big><strong>KEYWORD</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> A pattern which matches any Lua keyword.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_SYMBOL"></a>
+			<td> <pre class="example"><big><strong>SYMBOL</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> A pattern which matches any Lua symbol.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_IDENTIFIER"></a>
+			<td> <pre class="example"><big><strong>IDENTIFIER</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any Lua identifier.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_NUMBER"></a>
+			<td> <pre class="example"><big><strong>NUMBER</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any Lua number.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_STRING"></a>
+			<td> <pre class="example"><big><strong>STRING</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any Lua string.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_COMMENT"></a>
+			<td> <pre class="example"><big><strong>COMMENT</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any type of comment.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_SPACE"></a>
+			<td> <pre class="example"><big><strong>SPACE</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any space character.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_IGNORED"></a>
+			<td> <pre class="example"><big><strong>IGNORED</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches everything ignored by the parser.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_TOKEN"></a>
+			<td> <pre class="example"><big><strong>TOKEN</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any Lua <a href="#variable_IDENTIFIER">identifier</a>, <a href="#variable_KEYWORD">keyword</a>, <a href="#variable_SYMBOL">symbol</a>, <a href="#variable_NUMBER">number</a> or <a href="#variable_STRING">string</a>.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_ANY"></a>
+			<td> <pre class="example"><big><strong>ANY</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches any <a href="#variable_TOKEN">token</a>, <a href="#variable_COMMENT">comment</a> or <a href="#variable_SPACE">space</a>.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_BOF"></a>
+			<td> <pre class="example"><big><strong>BOF</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches the beginning of a file.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_EOF"></a>
+			<td> <pre class="example"><big><strong>EOF</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches the end of a file.
+ </td>
+		</tr>
+	
+		<tr>
+			<a name="variable_BANG"></a>
+			<td> <pre class="example"><big><strong>BANG</strong></big> = <small>LPeg pattern</small> </pre> </td>
+			<td> Matches UNIX's shebang (e.g. <code>#!/usr/bin/lua</code>).
+ </td>
+		</tr>
+	
+	</table>
+
+
+
+<hr/>
+<h1><a name="functions"></a> Functions </h1>
+	<table border="0" width="95%">
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_error">error</a></strong></big> (msg)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_error">error</a></strong></big> (msg) </code> </td>
+			<td> Returns a function which throws lexical errors. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_comment2text">comment2text</a></strong></big> (comment)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_comment2text">comment2text</a></strong></big> (comment) </code> </td>
+			<td> Strips all prefixing <code>--</code> and enclosing <code>--[=*[</code> from comment tokens. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_text2comment">text2comment</a></strong></big> (text)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_text2comment">text2comment</a></strong></big> (text) </code> </td>
+			<td> Encloses the text with comment markers. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_string2text">string2text</a></strong></big> (str)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_string2text">string2text</a></strong></big> (str) </code> </td>
+			<td> Strips all enclosing <code>'</code>, <code>"</code>, and <code>[=*[</code> from string tokens, and processes escape characters. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_text2string">text2string</a></strong></big> (text)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_text2string">text2string</a></strong></big> (text) </code> </td>
+			<td> Transforms a text into a syntactically valid Lua string. Similar to <code>string.format</code> with the <code>'%q'</code> option, but inserting escape numbers and escape codes where applicable. </td>
+		</tr>
+	
+	</table>
+
+	
+		<p/><a name="function_error"></a>
+		<hr/><code><big>error (msg)</big></code>
+		<ul>Returns a function which throws lexical errors.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>msg</code>: the message to be concatenated to the error message.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>A function built to be used as a <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg">LPeg pattern</a>, which will throw an error when matched.</li></ul>
+<p/>
+Usage example:
+<pre class="example">
+patt = intended_pattern^<font color="#B00000"><i>0</i></font> * (EOF + error<font color="#008000">'character after EOF'</font>)
+</pre>
+<p/>
+It may also be used as a normal function:
+<pre class="example">
+<font color="#0000FF"><b>function</b></font> (subject, i)
+ <font color="#0000FF"><b>if</b></font> bad_condition <font color="#0000FF"><b>then</b></font>
+   error<font color="#008000">'bad condition'</font>(subject, i)
+ <font color="#0000FF"><b>end</b></font>
+<font color="#0000FF"><b>end</b></font>
+</pre></ul>
+	
+		<p/><a name="function_comment2text"></a>
+		<hr/><code><big>comment2text (comment)</big></code>
+		<ul>Strips all prefixing <code>--</code> and enclosing <code>--[=*[</code> from comment tokens.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>comment</code>: the comment to strip.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the text without comment marking syntax.</li></ul></ul>
+	
+		<p/><a name="function_text2comment"></a>
+		<hr/><code><big>text2comment (text)</big></code>
+		<ul>Encloses the text with comment markers.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>text</code>: the text to comment.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the text with comment marking syntax.</li></ul></ul>
+	
+		<p/><a name="function_string2text"></a>
+		<hr/><code><big>string2text (str)</big></code>
+		<ul>Strips all enclosing <code>'</code>, <code>"</code>, and <code>[=*[</code> from string tokens, and processes escape characters.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>str</code>: the string to strip.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the text without string enclosers.</li></ul></ul>
+	
+		<p/><a name="function_text2string"></a>
+		<hr/><code><big>text2string (text)</big></code>
+		<ul>Transforms a text into a syntactically valid Lua string. Similar to <code>string.format</code> with the <code>'%q'</code> option, but inserting escape numbers and escape codes where applicable.
+<p/>
+<strong>Parameters</strong><ul>
+<li><code>text</code>: a string containing the text.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a string, similar to string.format with option <code>'%q'</code>.</li></ul></ul>
+	
+	<hr/>
+
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html> 
