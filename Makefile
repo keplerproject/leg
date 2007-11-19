@@ -1,22 +1,21 @@
 #
 # Makefile for Leg
-# $Id: Makefile,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+# $Id: Makefile,v 1.3 2007/11/19 13:56:47 hanjos Exp $
 # 
 
 # ===== SYSTEM PATHS ==============
 # The system's executables directory
 SYS_BIN = /usr/local/bin
 
-# The system's documentation directory
-SYS_DOC = /usr/share/doc
-
 # ===== LUA PATHS =================
 # Lua's library directory
 LUA_LIB = /usr/local/share/lua/5.1
 
 # ===== PROJECT INFO ==============
+# version
+VERSION = v0.1
+
 # project directories
-DOC_DIR = doc
 SRC_DIR = src
 TEST_DIR = test
 
@@ -27,7 +26,7 @@ DOCCER = lua /usr/local/share/lua/5.1/ldt/ldt.lua
 PROJ_NAME = leg
 
 # ===== MISC ======================
-TIMESTAMP = `date +'%Y-%m-%d_%H-%M-%S'`
+#TIMESTAMP = `date +'%Y-%m-%d'`
 
 # ===== RULES =====================
 
@@ -48,14 +47,12 @@ document:
 	mv ldt/* doc
 	rm -rf ldt
 
-# copy it to SYS_DOC
-
 bundle:
   # tar-ing it
-	tar cvf ../$(PROJ_NAME)_$(TIMESTAMP).tar $(SRC_DIR)/
+	tar cvf ../$(PROJ_NAME)_$(VERSION).tar $(SRC_DIR)/
 	
   # zipping it
-	gzip ../$(PROJ_NAME)_$(TIMESTAMP).tar
+	gzip ../$(PROJ_NAME)_$(VERSION).tar
 
 test:
 	lua tests/test.lua
