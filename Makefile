@@ -1,6 +1,6 @@
 #
 # Makefile for Leg
-# $Id: Makefile,v 1.3 2007/11/19 13:56:47 hanjos Exp $
+# $Id: Makefile,v 1.4 2007/11/19 19:52:09 hanjos Exp $
 # 
 
 # ===== SYSTEM PATHS ==============
@@ -13,11 +13,11 @@ LUA_LIB = /usr/local/share/lua/5.1
 
 # ===== PROJECT INFO ==============
 # version
-VERSION = v0.1
+VERSION = 0.1.1
 
 # project directories
 SRC_DIR = src
-TEST_DIR = test
+TEST_DIR = tests
 
 # document generator
 DOCCER = lua /usr/local/share/lua/5.1/ldt/ldt.lua
@@ -29,6 +29,10 @@ PROJ_NAME = leg
 #TIMESTAMP = `date +'%Y-%m-%d'`
 
 # ===== RULES =====================
+leg:
+	mkdir -p $(PROJ_NAME)
+	rm -f $(PROJ_NAME)/*.lua
+	cp src/*.lua $(PROJ_NAME)
 
 install:
   # copying the source files to LUA_LIB
@@ -48,11 +52,19 @@ document:
 	rm -rf ldt
 
 bundle:
-  # tar-ing it
-	tar cvf ../$(PROJ_NAME)_$(VERSION).tar $(SRC_DIR)/
+  # ugly trick, but it works
+	mkdir -p ../$(PROJ_NAME)-$(VERSION)
+	rm -rf ../$(PROJ_NAME)-$(VERSION)/*
+	cp -r * ../$(PROJ_NAME)-$(VERSION)
+
+	# tar-ing it (this works only with version 1.19 and beyond)
+	tar --create --verbose --exclude-vcs --file=../$(PROJ_NAME)-$(VERSION).tar ../$(PROJ_NAME)-$(VERSION)
 	
   # zipping it
-	gzip ../$(PROJ_NAME)_$(VERSION).tar
+	gzip ../$(PROJ_NAME)-$(VERSION).tar
+
+	# removing the buffer directory
+	rm -r ../$(PROJ_NAME)-$(VERSION)
 
 test:
-	lua tests/test.lua
+	lua $(TEST_DIR)/test.lua
