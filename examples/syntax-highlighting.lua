@@ -5,7 +5,7 @@
 --
 -- Author: Humberto Anjos
 -- 
--- $Id: syntax-highlighting.lua,v 1.1 2007/11/12 20:32:01 hanjos Exp $
+-- $Id: syntax-highlighting.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
 --
 -------------------------------------------------------------------------------
 
@@ -72,22 +72,25 @@ local STRING = scanner.STRING / function (c)
 end
 
 local NUMBER = scanner.NUMBER / function (c)
-  return '<font color="'..numberColor..'"><i>'..c..'</i></font>' 
+  return '<i><font color="'..numberColor..'">'..c..'</font></i>' 
 end
 
 local KEYWORD = scanner.KEYWORD / function (c) 
-  return '<font color="'..keywordColor..'"><b>'..c..'</b></font>' 
+  return '<b><font color="'..keywordColor..'">'..c..'</font></b>' 
 end
 
+-- opening tags
 local BOF = scanner.BOF / function () return '<html><body><pre>' end
 
+-- closing tags
 local EOF = scanner.EOF / function () return '</pre></body></html>' end
 
--- is here just to keep identifiers like bin2c from being parsed by NUMBER
+-- this is here just to keep identifiers like bin2c from being parsed by NUMBER
 local ID = scanner.IDENTIFIER
 
--- the substitution pattern...
-local patt = Cs( BOF * (COMMENT + STRING + ID + NUMBER + KEYWORD + 1)^0 * EOF )
+-- the substitution pattern. BOF and EOF are there to ensure that the
+-- opening and closing tags are there to make the result a valid HTML page.
+local patt = Cs( BOF* (COMMENT + STRING + ID + NUMBER + KEYWORD + 1)^0 *EOF )
 
 -- voilà!
 print(patt:match(subject))

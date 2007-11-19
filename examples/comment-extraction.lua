@@ -5,7 +5,7 @@
 --
 -- Authors: Humberto Anjos and Francisco Sant'Anna
 -- 
--- $Id: comment-extraction.lua,v 1.1 2007/11/12 20:32:01 hanjos Exp $
+-- $Id: comment-extraction.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
 --
 -------------------------------------------------------------------------------
 
@@ -66,14 +66,14 @@ local S = scanner.SPACE ^ 0
 Stat = P( parser.apply(V'Stat', nil) )
 
 -- some interesting captures bundled up in a table. Note that the table keys
--- match the grammar rules we want to add captures to. Whatever rules aren't in
--- the rules table below will come from parser.rules .
+-- match the grammar rules we want to add captures to. Any rules not in the
+-- `rules` table below will come from parser.rules .
 captures = {
   [1] = function (...) -- the initial rule
     return '<function>'..table.concat{...}..'</function>' 
   end,
   
-  GlobalFunction  = function (name, parlist)
+  GlobalFunction  = function (name, parlist) -- global function declaration
     return '<name>'..name..'</name><parlist>'..(parlist or '')..'</parlist>' 
   end,
   
@@ -82,7 +82,7 @@ captures = {
   COMMENT   = scanner.comment2text, -- extract comment trappings
 }
 
--- new rules table
+-- the rules table
 rules = {
   [1] = ((V'COMMENT' *S) ^ 0) *S* V'GlobalFunction', -- new initial rule
   COMMENT = scanner.COMMENT, -- just to add COMMENT's capture to the capture table
@@ -96,7 +96,8 @@ rules = {
 commentedFunc = P( grammar.apply(parser.rules, rules, captures) ) 
 
 -- finally, this pattern matches all commented global functions, Stats 
--- or any other Lua tokens and packages the results in a table
+-- or any other Lua tokens and packages the results in a table. This is done
+-- to capture only global function declarations in the global scope.
 patt = (commentedFunc + Stat + scanner.ANY)^0 / function(...) 
   return table.concat({...}, '\n\n') -- some line breaks for easier reading
 end

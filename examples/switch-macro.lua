@@ -8,7 +8,7 @@
 --
 -- Author: Humberto Anjos
 -- 
--- $Id: switch-macro.lua,v 1.1 2007/11/12 20:32:01 hanjos Exp $
+-- $Id: switch-macro.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
@@ -75,69 +75,96 @@ subject = args[1] or [=[
 ]=]
 
 -- After reading several proposals on the Lua discussion list, I decided to 
--- implement the following one:
+-- implement this one:
 -- 
 -- match <exp>
---   when <case1> do <block1>
---   when <case2> do <block2>
+--   when <case 1> do <block 1>
+--   when <case 2> do <block 2>
 --   ...
---   else <block_else>
+--   when <case n> do <block n>
+--   else <block else>
 -- end
 -- 
--- with <case1>, <case2>, ... <casen> are Lua expressions.
+-- where <case 1>, <case 2>, ... <case n> are Lua expressions.
 -- 
--- which will be converted into the following code:
+-- The construct above will be converted into the following code:
 --
 -- do
 --   local __temp__ = <exp>
---   if __temp__ == (<case1>) then <block1>
---   elseif __temp__ == (<case2>) then <block2>
+--   if __temp__ == (<case 1>) then <block 1>
+--   elseif __temp__ == (<case 2>) then <block 2>
 --   ...
---   else <block_else> end
+--   elseif __temp__ == (<case n>) then <block n>
+--   else <block else> end
 -- end
 -- 
--- Notes:
+-- Implementation notes:
 -- 
 -- * Technically, the local variable __temp__ should receive a name provably 
--- unique in the program. But, for this example, naming it __temp__ and 
--- restricting its scope does the trick.
--- * If there's only the default case, its block will be the sole result.
--- * If there's no cases and no default case, the if-elseif blocks will not be 
--- generated.
--- * About comment capturing: some comments are captured, some are not. The 
--- comments captured are those which are in the middle or at the end of a 
--- <block> statement, being captured along with the block.
+--   unique in the program. But, for this example, naming it __temp__ and 
+--   restricting its scope will do the trick.
+-- 
+-- * The local declaration will always be generated, even if there are no 
+--   clauses to match. This is done because the expression in the local 
+--   declaration might have side effects, which affect program semantics even
+--   if no match is made.
+-- 
+-- * The default case, if present, must be the last clause.
+-- 
+-- * If there's only the default case, the local declaration and the default 
+--   case's block will be generated, without an enclosing if statement.
+-- 
+-- * If there are no cases and no default case, only the local declaration will
+--   be generated. 
+-- 
+-- * Some comments are captured, some are not. The comments captured are those
+--   which are in the middle or at the end of a <block> statement, and are 
+--   captured along with the block. The other ones are matched as part of the 
+--   spacing, and consequently not captured.
+-- 
+-- * This is an obvious one, but: since the result is a series of if-elseif 
+--   blocks, there is no fallthrough.
+-- 
+-- * A reasonable improvement would be allowing a case clause to have several 
+--   possible matches, generating something like 
+--   if __temp__ == (<case 1>) or __temp__ == (<case 2>) then <block n> ...
+-- 
+--   This is left as an exercise to the reader *shameless cop-out*.
 
 -- spacing
 local S = V'IGNORED' -- parser.rules.IGNORED or scanner.IGNORED could be used
 
--- epsilon
+-- epsilon rule
 local EPSILON = V'EPSILON' / function () end
 
--- new matching rule
+-- new matching rule. Notice that the Block rule has no captures.
 local Match = (P'match' *S* C(V'Exp') *S*
               Ct((P'when' *S* C(V'Exp') *S* P'do' *S* V'Block')^0) *S*
               ((P'else' *S* V'Block') + EPSILON) *S* P'end')
               / function (exp, cases, default)
-                if #cases == 0 then
-                  if default then
+                if #cases == 0 then -- no case clauses
+                  if default then -- return the local declaration and the block
                     return 'do local __temp__ = ('..exp..') '..default..' end'
-                  else
-                    return ''
+                  else -- generate just the local declaration
+                    return 'do local __temp__ = ('..exp..') end'
                   end
-                else
+                else -- there's at least one clause
                   local str = 'do local __temp__ = ('..exp..') '
                   
+                  -- generating a new if or elseif block
                   for i = 1, #cases - 3, 2 do
-                    str = str..'if __temp__ == ('..cases[i]..') then '..cases[i + 1]..' else'
+                    str = str..'if __temp__ == ('..cases[i]..') then '
+                      ..cases[i + 1]..' else'
                   end
                   
-                  -- the last case
-                  str = str..'if __temp__ == ('..cases[#cases - 1]..') then '..cases[#cases]
-                  if default then
+                  -- the last case clause
+                  str = str..'if __temp__ == ('..cases[#cases - 1]..') then '
+                    ..cases[#cases]
+                    
+                  if default then -- generate the else block
                     str = str..' else '..default..' end'
-                  else
-                    str = str..' end' -- end if
+                  else -- no else, just finish it
+                    str = str..' end' -- end if-elseif chain
                   end
                   
                   return str..' end' -- end do
@@ -147,11 +174,13 @@ local Match = (P'match' *S* C(V'Exp') *S*
 -- creating the LPeg pattern
 local oldStat, oldBlock = parser.rules.Stat, parser.rules.Block
 
-
 local MATCH = P( parser.apply { 
-  Stat = oldStat + Match, -- adding Match to the list of possible Statements
-  Block = Cs(oldBlock) -- the Block rule needs to be updated as well, in order to 
-                       -- make the necessary substitutions to inner Match statements
+  -- adding Match to the list of valid Statements
+  Stat = oldStat + Match, 
+  
+  -- the Block rule needs to be updated as well, in order to make the 
+  -- necessary substitutions to inner Match statements
+  Block = Cs(oldBlock)
 } )
 
 print('subject:', '\n'..subject)

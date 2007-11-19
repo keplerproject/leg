@@ -1,6 +1,7 @@
 #
 # Makefile for Leg
-#
+# $Id: Makefile,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+# 
 
 # ===== SYSTEM PATHS ==============
 # The system's executables directory
