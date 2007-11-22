@@ -10,7 +10,8 @@
 # Description
 
 This module defines a handful of operations which can be applied to 
-[http://www.inf.puc-rio.br/~roberto/lpeg.html LPeg] grammars in general.
+[http://www.inf.puc-rio.br/~roberto/lpeg.html LPeg] patterns and grammars in
+general.
 
 # Dependencies
 
@@ -176,7 +177,7 @@ The printed result is:
 --]=]
 
 
--- $Id: grammar.lua,v 1.1 2007/11/12 20:32:01 hanjos Exp $
+-- $Id: grammar.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
 
 -- basic functions
 local assert  = assert
@@ -186,13 +187,85 @@ local type    = type
 -- imported modules
 local lpeg = require 'lpeg'
 
+-- imported functions
+local P, V = lpeg.P, lpeg.V
+
 -- module declaration
 module 'leg.grammar'
 
--- A capture function, so that `patt / C` is equivalent to `m.C(patt)`.
+--[[ 
+Returns a pattern which matches any of the patterns received.
+
+**Example:**
+``
+local g, s, m = require 'leg.grammar', require 'leg.scanner', require 'lpeg'
+
+-- -- match numbers or operators, capture the numbers
+print( (g.anyOf { '+', '-', '%*', '/', m.C(s.NUMBER) }):match '34.5@23 %* 56 / 45 - 45' )
+-- --> prints 34.5
+``
+
+**Parameters:**
+* `list`: a list of zero or more LPeg patterns or values which can be fed to [http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg lpeg.P].
+
+**Returns:**
+* a pattern which matches any of the patterns received.
+--]]
+function anyOf(list)
+  local patt = P(false)
+  
+  for i = 1, #list, 1 do
+    patt = P(list[i]) + patt
+  end
+  
+  return patt
+end
+
+--[=[
+Returns a pattern which matches a list of `patt`s, separated by `sep`.
+
+**Example:** matching comma-separated values:
+``
+local g, m = require 'leg.grammar', require 'lpeg'
+
+-- -- separator
+local sep = m.P',' + m.P'\n'
+
+-- -- element: anything but sep, capture it
+local elem = m.C((1 - sep)^0)
+
+-- -- pattern
+local patt = g.listOf(elem, sep)
+
+-- -- matching
+print( patt:match %[%[a, b, 'christmas eve'
+  d, evening; mate!
+  f%]%])
+-- --> prints out "a        b       'christmas eve'  d        evening; mate! f"
+``
+
+**Parameters:**
+* `patt`: a LPeg pattern.
+* `sep`: a LPeg pattern.
+
+**Returns:**
+* the following pattern: ``patt %* (sep %* patt)^0``
+--]=]
+function listOf(patt, sep)
+  patt, sep = P(patt), P(sep)
+  
+  return patt * (sep * patt)^0
+end
+
+
+--[[ 
+A capture function, made so that `patt / C` is equivalent to `m.C(patt)`. It's intended to be used in capture tables, such as those required by [#function_pipe pipe] and [#function_apply apply].
+--]]
 function C(...) return ... end
 
--- A capture function, so that `patt / Ct` is equivalent to `m.Ct(patt)`.
+--[[ 
+A capture function, made so that `patt / Ct` is equivalent to `m.Ct(patt)`. It's intended to be used in capture tables, such as those required by [#function_pipe pipe] and [#function_apply apply].
+--]]
 function Ct(...) return { ... } end
 
 --[[
@@ -205,11 +278,13 @@ Creates a shallow copy of `grammar`.
 * a newly created table, with `grammar`'s keys and values.
 --]]
 function copy(grammar)
-	_grammar = {}
+	local newt = {}
+  
 	for k, v in pairs(grammar) do
-		_grammar[k] = v
+		newt[k] = v
 	end
-	return _grammar
+  
+	return newt
 end
 
 --[[
@@ -275,7 +350,7 @@ end
 * `captures`: optional, the final capture table.
 
 **Returns:**
-* the new grammar.
+* `rules`, suitably augmented by `grammar` and `captures`.
 --]]
 function apply (grammar, rules, captures)
 	if rules ~= nil then

@@ -4,6 +4,8 @@
 -- Authors: Humberto Anjos
 -- Copyright (c) 2007 Leg
 --
+-- $Id: test_scanner.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
+--
 -------------------------------------------------------------------------------
 
 local scanner = require 'leg.scanner'

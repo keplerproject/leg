@@ -1,6 +1,6 @@
 #
 # Makefile for Leg
-# $Id: Makefile,v 1.4 2007/11/19 19:52:09 hanjos Exp $
+# $Id: Makefile,v 1.5 2007/11/22 21:15:24 hanjos Exp $
 # 
 
 # ===== SYSTEM PATHS ==============
@@ -67,4 +67,13 @@ bundle:
 	rm -r ../$(PROJ_NAME)-$(VERSION)
 
 test:
-	lua $(TEST_DIR)/test.lua
+	@echo
+	@echo '==================== SCANNER ===================='
+	@echo
+	@lua $(TEST_DIR)/test_scanner.lua
+	@echo
+	@echo '==================== PARSER ===================='
+	@echo
+	@lua $(TEST_DIR)/test_parser.lua
+	@echo
+	@echo '==================== DONE! ===================='

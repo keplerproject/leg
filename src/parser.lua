@@ -140,7 +140,7 @@ The implementation has certain peculiarities that merit clarification:
 * In Lua's [http://www.lua.org/manual/5.1/manual.html#8 original extended BNF grammar], `Var` and `FunctionCall` are defined using left recursion, which is unavailable in PEGs. In this implementation, the problem was solved by modifying the PEG rules to eliminate the left recursion, and by setting some markers (with some LPeg chicanery) to ensure the proper pattern is being used.
 --]]
 
--- $Id: parser.lua,v 1.1 2007/11/12 20:32:02 hanjos Exp $
+-- $Id: parser.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
 
 -- basic modules
 local _G     = _G
@@ -205,17 +205,19 @@ end
 -- throws an error if the grammar rule `rule` doesn't match
 -- `desc` is there for a slightly better error message
 local function CHECK(rule, desc)
-  desc = desc or 'statement'
+  patt, desc = m.V(rule), desc or 'chunk'
   
-  return m.V(rule) + m.P(function (s, i)
-    local line = lines(s:sub(1, i)) - 1
+  return patt + m.P(function (s, i)
+    local line = lines(s:sub(1, i))
+    local vicinity = s:sub(i-5, i+5):gsub("\n", "<EOL>")
     
-    error('Malformed '..desc..' near line '..line..': a "'..rule:lower()..'" is missing!', 0)
+    error('Malformed '..desc..' in line '..line..', near "'..vicinity..'": a "'..rule:lower()..'" is missing!', 0)
   end)
+
 end
 
 -- this will be used a lot below
-local S = m.V'IGNORED'
+local S, listOf, anyOf = m.V'IGNORED', grammar.listOf, grammar.anyOf
 
 --[[ 
 A table holding the Lua 5.1 grammar. See [#section_The_Grammar The Grammar] for an extended explanation.
@@ -240,40 +242,44 @@ rules = {
 	, Block   = m.V'Chunk'
 
 	-- STATEMENTS
-	, Stat              = m.V'Assign' + m.V'FunctionCall' + m.V'Do' 
-                      + m.V'While' + m.V'Repeat' + m.V'If'
-	                    + m.V'NumericFor' + m.V'GenericFor' 
-                      + m.V'GlobalFunction' + m.V'LocalFunction' 
-                      + m.V'LocalAssign'
-	, Assign        = m.V'VarList' *S* m.V'=' *S* m.V'ExpList'
-	, Do            = m.V'DO' *S* m.V'Block' *S* CHECK('END', 'do block')
-	, While         = m.V'WHILE' *S* m.V'Exp' *S* CHECK('DO', 'while loop')
-                      *S* m.V'Block' *S* CHECK('END', 'while loop')
-	, Repeat        = m.V'REPEAT' *S* m.V'Block' 
-                      *S* CHECK('UNTIL', 'repeat loop') *S* m.V'Exp'
-	, If            = m.V'IF' *S* m.V'Exp' *S* CHECK('THEN', 'then block') *S* m.V'Block'
-	                    * (S* m.V'ELSEIF' *S* m.V'Exp' 
-                      *S* CHECK('THEN', 'elseif block') *S* m.V'Block')^0
-	                    * ((S* m.V'ELSE' * m.V'Block') + m.V'EPSILON')
-	                    * S* CHECK('END', 'if statement')
-	, NumericFor    = m.V'FOR' *S* m.V'Name' *S* m.V'=' *S* m.V'Exp' 
-                      *S* m.V',' *S* m.V'Exp' 
-                      *S* ((m.V',' *S* m.V'Exp') + m.V'EPSILON')
-	                    *S* CHECK('DO', 'numeric for loop') *S* m.V'Block' *S* CHECK('END', 'numeric for loop')
+	, Stat        = m.V'Assign' + m.V'FunctionCall' + m.V'Do' 
+                  + m.V'While' + m.V'Repeat' + m.V'If'
+                  + m.V'NumericFor' + m.V'GenericFor' 
+                  + m.V'GlobalFunction' + m.V'LocalFunction' 
+                  + m.V'LocalAssign'
+	, Assign      = m.V'VarList' *S* m.V'=' *S* m.V'ExpList'
+	, Do          = m.V'DO' *S* m.V'Block' *S* CHECK('END', 'do block')
+	, While       = m.V'WHILE' *S* m.V'Exp' *S* CHECK('DO', 'while loop')
+                  *S* m.V'Block' *S* CHECK('END', 'while loop')
+	, Repeat      = m.V'REPEAT' *S* m.V'Block' 
+                  *S* CHECK('UNTIL', 'repeat loop') *S* m.V'Exp'
+	, If          = m.V'IF' *S* m.V'Exp' *S* CHECK('THEN', 'then block') 
+                  *S* m.V'Block' * (S* m.V'ELSEIF' *S* m.V'Exp' 
+                  *S* CHECK('THEN', 'elseif block') *S* m.V'Block')^0
+                  * ((S* m.V'ELSE' * m.V'Block') + m.V'EPSILON')
+                  * S* CHECK('END', 'if statement')
+  , NumericFor  = m.V'FOR' *S* m.V'Name' *S* m.V'=' *S* m.V'Exp' 
+                  *S* m.V',' *S* m.V'Exp' 
+                  *S* ((m.V',' *S* m.V'Exp') + m.V'EPSILON')
+                  *S* CHECK('DO', 'numeric for loop') *S* m.V'Block' 
+                  *S* CHECK('END', 'numeric for loop')
 	, GenericFor    = m.V'FOR' *S* m.V'NameList' *S* m.V'IN' 
                       *S* m.V'ExpList' *S* CHECK('DO', 'generic for loop') *S* m.V'Block' *S* CHECK('END', 'generic for loop')
 	, GlobalFunction = m.V'FUNCTION' *S* m.V'FuncName' *S* m.V'FuncBody'
 	, LocalFunction = m.V'LOCAL' *S* m.V'FUNCTION' *S* m.V'Name' 
                       *S* m.V'FuncBody'
 	, LocalAssign   = m.V'LOCAL' *S* m.V'NameList' 
-                      * (S* m.V'=' *S* m.V'ExpList')^-1
-	, LastStat          = m.V'RETURN' * (S* m.V'ExpList')^-1
-	                    + m.V'BREAK'
+                    * (S* m.V'=' *S* m.V'ExpList')^-1
+	, LastStat      = m.V'RETURN' * (S* m.V'ExpList')^-1
+                    + m.V'BREAK'
 
 	-- LISTS
-	, VarList  = m.V'Var' * (S* m.V',' *S* m.V'Var')^0
-	, NameList = m.V'Name' * (S* m.V',' *S* m.V'Name')^0
-	, ExpList  = m.V'Exp' * (S* m.V',' *S* m.V'Exp')^0
+	--, VarList  = m.V'Var' * (S* m.V',' *S* m.V'Var')^0
+	--, NameList = m.V'Name' * (S* m.V',' *S* m.V'Name')^0
+	--, ExpList  = m.V'Exp' * (S* m.V',' *S* m.V'Exp')^0
+  , VarList   = listOf(m.V'Var' , S* m.V',' *S)
+  , NameList  = listOf(m.V'Name', S* m.V',' *S)
+  , ExpList   = listOf(m.V'Exp' , S* m.V',' *S)
 
 	-- EXPRESSIONS
 	, Exp             = m.V'_SimpleExp' * (S* m.V'BinOp' *S* m.V'_SimpleExp')^0
@@ -327,9 +333,9 @@ rules = {
 	, UnOp     = m.V'-' + m.V'NOT' + m.V'#'
 }
 
--- puts all keywords and symbols as grammar rules
-rules = grammar.apply(rules, scanner.keywords)
-rules = grammar.apply(rules, scanner.symbols)
+-- puts all the keywords and symbols to the grammar
+grammar.complete(rules, scanner.keywords)
+grammar.complete(rules, scanner.symbols)
 
 --[[
 Checks if `input` is valid Lua source code.

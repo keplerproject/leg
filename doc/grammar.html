@@ -20,7 +20,7 @@
   <br/>
   
 	<div id="product_description"> <small><em> <b>Version:</b> 0.1 </em></small></div> 
-    <div id="product_description"> <small><em><b>Generated:</b> November 09, 2007 </em></small> </div>
+    <div id="product_description"> <small><em><b>Generated:</b> November 22, 2007 </em></small> </div>
   
 </div> <!-- id="product" -->
 
@@ -84,17 +84,21 @@
 	<li><a href="#functions"> Functions </a>
 		<ul>
 		
+			<li><code><a href="#function_anyOf"> anyOf </a></code></li>
+		
+			<li><code><a href="#function_apply"> apply </a></code></li>
+		
 			<li><code><a href="#function_C"> C </a></code></li>
-		
-			<li><code><a href="#function_Ct"> Ct </a></code></li>
-		
-			<li><code><a href="#function_copy"> copy </a></code></li>
 		
 			<li><code><a href="#function_complete"> complete </a></code></li>
 		
-			<li><code><a href="#function_pipe"> pipe </a></code></li>
+			<li><code><a href="#function_copy"> copy </a></code></li>
 		
-			<li><code><a href="#function_apply"> apply </a></code></li>
+			<li><code><a href="#function_Ct"> Ct </a></code></li>
+		
+			<li><code><a href="#function_listOf"> listOf </a></code></li>
+		
+			<li><code><a href="#function_pipe"> pipe </a></code></li>
 		
 		</ul>
 	</li>
@@ -114,7 +118,8 @@
 <h1><a name="section_Description"></a>Description</h1>
 <p/>
 This module defines a handful of operations which can be applied to 
-<a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> grammars in general.
+<a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> patterns and grammars in
+general.
 <p/>
 <h1><a name="section_Dependencies"></a>Dependencies</h1>
 <ul>
@@ -197,20 +202,20 @@ By combining <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> and
 <p/>
 <pre class="example">
 <font color="#808080"> -- change only the initial rule and make no captures</font>
-patt = grammar.apply(parser.rules, scanner.COMMENT^-<font color="#B00000"><i>1</i></font> * lpeg.V<font color="#008000">'GlobalFunction'</font>, <font color="#0000FF"><b>nil</b></font>)
+patt = <b>grammar.apply</b>(parser.rules, scanner.COMMENT^-<font color="#B00000"><i>1</i></font> * <b>lpeg.V</b><font color="#008000">'GlobalFunction'</font>, <font color="#0000FF"><b>nil</b></font>)
 
 <font color="#808080"> -- transform the new grammar into a LPeg pattern</font>
-patt = lpeg.P(patt)
+patt = <b>lpeg.P</b>(patt)
 
 <font color="#808080"> -- making a pattern that matches any Lua statement, also without captures</font>
-Stat = lpeg.P( grammar.apply(parser.rules, lpeg.V<font color="#008000">'Stat'</font>, <font color="#0000FF"><b>nil</b></font>) )
+Stat = <b>lpeg.P</b>( <b>grammar.apply</b>(parser.rules, <b>lpeg.V</b><font color="#008000">'Stat'</font>, <font color="#0000FF"><b>nil</b></font>) )
 
 <font color="#808080"> -- a pattern which matches function declarations and skips statements in</font>
 <font color="#808080"> -- inner scopes or undesired tokens</font>
 patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font>
 
 <font color="#808080"> -- matching a string</font>
-patt:match(subject)
+<b>patt:match</b>(subject)
 </pre>
 <p/>
 These are the relevant rules in <a href="parser.html#section_The_Grammar">the grammar</a>:
@@ -222,7 +227,7 @@ FuncBody     = <font color="#008000">'('</font> * (ParList + EPSILON) * <font co
 ParList      = NameList * (<font color="#008000">','</font> * <font color="#008000">'...'</font>)^-<font color="#B00000"><i>1</i></font>
 NameList     = ID * (<font color="#008000">','</font> * ID)^<font color="#B00000"><i>0</i></font>
 ID           = scanner.ID
-EPSILON      = lpeg.P(<font color="#0000FF"><b>true</b></font>)
+EPSILON      = <b>lpeg.P</b>(<font color="#0000FF"><b>true</b></font>)
 </pre>
 <p/>
 It may seem that <code>ParList + EPSILON</code> could be substituted for <code>ParList^-1</code> (optionally match <code>ParList</code>), but then no captures would be made for empty parameter lists, and <code>GlobalFunction</code> would get all strings matched by <code>FuncBody</code>. The <code>EPSILON</code> rule acts in this manner as a placeholder in the argument list, avoiding any argument list processing in the capture function.
@@ -235,7 +240,7 @@ Since no captures are being made, <a href="http://www.inf.puc-rio.br/~roberto/lp
 <font color="#808080"> -- the rules table below will come from parser.rules .</font>
 captures = {
  [<font color="#B00000"><i>1</i></font>] = <font color="#0000FF"><b>function</b></font> (...) <font color="#808080"> -- the initial rule</font>
-   <font color="#0000FF"><b>return</b></font> <font color="#008000">'&lt;function&gt;'</font>..table.concat{...}..<font color="#008000">'&lt;/function&gt;'</font> 
+   <font color="#0000FF"><b>return</b></font> <font color="#008000">'&lt;function&gt;'</font>..<font color = "#800040"><b>table.concat</b></font>{...}..<font color="#008000">'&lt;/function&gt;'</font> 
  <font color="#0000FF"><b>end</b></font>,
  
  GlobalFunction = <font color="#0000FF"><b>function</b></font> (name, parlist)
@@ -252,20 +257,20 @@ captures = {
 
 <font color="#808080"> -- rules table</font>
 rules = {
- [<font color="#B00000"><i>1</i></font>]     = ((lpeg.V<font color="#008000">'COMMENT'</font> *S) ^ <font color="#B00000"><i>0</i></font>) *S* lpeg.V<font color="#008000">'GlobalFunction'</font>,
+ [<font color="#B00000"><i>1</i></font>]     = ((<b>lpeg.V</b><font color="#008000">'COMMENT'</font> *S) ^ <font color="#B00000"><i>0</i></font>) *S* <b>lpeg.V</b><font color="#008000">'GlobalFunction'</font>,
  COMMENT = scanner.COMMENT,
 }
 
 <font color="#808080"> -- building the new grammar and adding the captures</font>
-patt = lpeg.P( grammar.apply(parser.rules, rules, captures) )
+patt = <b>lpeg.P</b>( <b>grammar.apply</b>(parser.rules, rules, captures) )
 
 <font color="#808080"> -- a pattern that matches a sequence of patts and concatenates the results</font>
 patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font> / <font color="#0000FF"><b>function</b></font>(...) 
- <font color="#0000FF"><b>return</b></font> table.concat({...}, <font color="#008000">'\n\n'</font>) <font color="#808080"> -- some line breaks for easier reading</font>
+ <font color="#0000FF"><b>return</b></font> <font color = "#800040"><b>table.concat</b></font>({...}, <font color="#008000">'\n\n'</font>) <font color="#808080"> -- some line breaks for easier reading</font>
 <font color="#0000FF"><b>end</b></font>
 
 <font color="#808080"> -- finally, matching a string</font>
-print(patt:match(subject))
+<b><font color ="#800040">print</font></b>(<b>patt:match</b>(subject))
 </pre>
 <p/>
 <code>FuncBody</code> needs no captures, as <code>Block</code> and all its non-terminals have none; it 
@@ -279,6 +284,7 @@ The printed result is:
 </pre>
 <p/>
 <p/>
+<p/>
 
 
 
@@ -289,21 +295,21 @@ The printed result is:
 	<table border="0" width="95%">
 	
 		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_anyOf">anyOf</a></strong></big> (list)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_anyOf">anyOf</a></strong></big> (list) </code> </td>
+			<td> Returns a pattern which matches any of the patterns received. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_apply">apply</a></strong></big> (grammar, rules, captures)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_apply">apply</a></strong></big> (grammar, rules, captures) </code> </td>
+			<td> <a href="#section_Completing">Completes</a> <code>rules</code> with <code>grammar</code> and then <a href="#Applying">applies</a> <code>captures</code>.      </td>
+		</tr>
+	
+		<tr>
 			<!-- <td> <pre class="example"><big><strong><a href="#functions_C">C</a></strong></big> ()</pre> </td> -->
 			<td> <code><big><strong> <a href="#function_C">C</a></strong></big> () </code> </td>
-			<td> A capture function, so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>. </td>
-		</tr>
-	
-		<tr>
-			<!-- <td> <pre class="example"><big><strong><a href="#functions_Ct">Ct</a></strong></big> ()</pre> </td> -->
-			<td> <code><big><strong> <a href="#function_Ct">Ct</a></strong></big> () </code> </td>
-			<td> A capture function, so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>. </td>
-		</tr>
-	
-		<tr>
-			<!-- <td> <pre class="example"><big><strong><a href="#functions_copy">copy</a></strong></big> (grammar)</pre> </td> -->
-			<td> <code><big><strong> <a href="#function_copy">copy</a></strong></big> (grammar) </code> </td>
-			<td> Creates a shallow copy of <code>grammar</code>. </td>
+			<td> A capture function, made so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>. It's intended to be used in capture tables, such as those required by <a href="#function_pipe">pipe</a> and <a href="#function_apply">apply</a>. </td>
 		</tr>
 	
 		<tr>
@@ -313,61 +319,50 @@ The printed result is:
 		</tr>
 	
 		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_copy">copy</a></strong></big> (grammar)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_copy">copy</a></strong></big> (grammar) </code> </td>
+			<td> Creates a shallow copy of <code>grammar</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_Ct">Ct</a></strong></big> ()</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_Ct">Ct</a></strong></big> () </code> </td>
+			<td> A capture function, made so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>. It's intended to be used in capture tables, such as those required by <a href="#function_pipe">pipe</a> and <a href="#function_apply">apply</a>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_listOf">listOf</a></strong></big> (patt, sep)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_listOf">listOf</a></strong></big> (patt, sep) </code> </td>
+			<td> Returns a pattern which matches a list of <code>patt</code>s, separated by <code>sep</code>. </td>
+		</tr>
+	
+		<tr>
 			<!-- <td> <pre class="example"><big><strong><a href="#functions_pipe">pipe</a></strong></big> (dest, orig)</pre> </td> -->
 			<td> <code><big><strong> <a href="#function_pipe">pipe</a></strong></big> (dest, orig) </code> </td>
 			<td> <a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>. </td>
 		</tr>
 	
-		<tr>
-			<!-- <td> <pre class="example"><big><strong><a href="#functions_apply">apply</a></strong></big> (grammar, rules, captures)</pre> </td> -->
-			<td> <code><big><strong> <a href="#function_apply">apply</a></strong></big> (grammar, rules, captures) </code> </td>
-			<td> <a href="#section_Completing">Completes</a> <code>rules</code> with <code>grammar</code> and then <a href="#Applying">applies</a> <code>captures</code>.      </td>
-		</tr>
-	
 	</table>
 
 	
-		<p/><a name="function_C"></a>
-		<hr/><code><big>C ()</big></code>
-		<ul>A capture function, so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>.</ul>
-	
-		<p/><a name="function_Ct"></a>
-		<hr/><code><big>Ct ()</big></code>
-		<ul>A capture function, so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>.</ul>
-	
-		<p/><a name="function_copy"></a>
-		<hr/><code><big>copy (grammar)</big></code>
-		<ul>Creates a shallow copy of <code>grammar</code>.
+		<p/><a name="function_anyOf"></a>
+		<hr/><code><big>anyOf (list)</big></code>
+		<ul>Returns a pattern which matches any of the patterns received.
+<p/>
+<strong>Example:</strong>
+<pre class="example">
+<font color="#0000FF"><b>local</b></font> g, s, m = <b><font color ="#800040">require</font></b> <font color="#008000">'leg.grammar'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'leg.scanner'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'lpeg'</font>
+
+<font color="#808080"> -- match numbers or operators, capture the numbers</font>
+<b><font color ="#800040">print</font></b>( (<b>g.anyOf</b> { <font color="#008000">'+'</font>, <font color="#008000">'-'</font>, <font color="#008000">'*'</font>, <font color="#008000">'/'</font>, <b>m.C</b>(s.NUMBER) }):match <font color="#008000">'34.5@23 * 56 / 45 - 45'</font> )
+<font color="#808080"> --> prints 34.5</font>
+</pre>
 <p/>
 <strong>Parameters:</strong><ul>
-<li><code>grammar</code>: a regular table.</li></ul>
+<li><code>list</code>: a list of zero or more LPeg patterns or values which can be fed to <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg">lpeg.P</a>.</li></ul>
 <p/>
 <strong>Returns:</strong><ul>
-<li>a newly created table, with <code>grammar</code>'s keys and values.</li></ul></ul>
-	
-		<p/><a name="function_complete"></a>
-		<hr/><code><big>complete (dest, orig)</big></code>
-		<ul><a href="#section_Completing">Completes</a> <code>dest</code> with <code>orig</code>.
-<p/>
-<strong>Parameters:</strong><ul>
-<li><code>dest</code>: the new grammar. Must be a table.</li>
-<li><code>orig</code>: the original grammar. Must be a table.</li></ul>
-<p/>
-<strong>Returns:</strong><ul>
-<li><code>dest</code>, with new rules inherited from <code>orig</code>.</li></ul></ul>
-	
-		<p/><a name="function_pipe"></a>
-		<hr/><code><big>pipe (dest, orig)</big></code>
-		<ul><a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>.
-<p/>
-<code>dest</code> and <code>orig</code> should be tables, with each key storing a capture function. Each capture in <code>dest</code> will be altered to use the results for the matching one in <code>orig</code> as input, using function composition. Should <code>orig</code> possess keys not in <code>dest</code>, <code>dest</code> will copy them.
-<p/>
-<strong>Parameters:</strong><ul>
-<li><code>dest</code>: a capture table.</li>
-<li><code>orig</code>: a capture table.</li></ul>
-<p/>
-<strong>Returns:</strong><ul>
-<li><code>dest</code>, suitably modified.</li></ul></ul>
+<li>a pattern which matches any of the patterns received.</li></ul></ul>
 	
 		<p/><a name="function_apply"></a>
 		<hr/><code><big>apply (grammar, rules, captures)</big></code>
@@ -388,7 +383,80 @@ The printed result is:
 <li><code>captures</code>: optional, the final capture table.</li></ul>
 <p/>
 <strong>Returns:</strong><ul>
-<li>the new grammar.</li></ul></ul>
+<li><code>rules</code>, suitably augmented by <code>grammar</code> and <code>captures</code>.</li></ul></ul>
+	
+		<p/><a name="function_C"></a>
+		<hr/><code><big>C ()</big></code>
+		<ul>A capture function, made so that <code>patt / C</code> is equivalent to <code>m.C(patt)</code>. It's intended to be used in capture tables, such as those required by <a href="#function_pipe">pipe</a> and <a href="#function_apply">apply</a>.</ul>
+	
+		<p/><a name="function_complete"></a>
+		<hr/><code><big>complete (dest, orig)</big></code>
+		<ul><a href="#section_Completing">Completes</a> <code>dest</code> with <code>orig</code>.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>dest</code>: the new grammar. Must be a table.</li>
+<li><code>orig</code>: the original grammar. Must be a table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>dest</code>, with new rules inherited from <code>orig</code>.</li></ul></ul>
+	
+		<p/><a name="function_copy"></a>
+		<hr/><code><big>copy (grammar)</big></code>
+		<ul>Creates a shallow copy of <code>grammar</code>.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>grammar</code>: a regular table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a newly created table, with <code>grammar</code>'s keys and values.</li></ul></ul>
+	
+		<p/><a name="function_Ct"></a>
+		<hr/><code><big>Ct ()</big></code>
+		<ul>A capture function, made so that <code>patt / Ct</code> is equivalent to <code>m.Ct(patt)</code>. It's intended to be used in capture tables, such as those required by <a href="#function_pipe">pipe</a> and <a href="#function_apply">apply</a>.</ul>
+	
+		<p/><a name="function_listOf"></a>
+		<hr/><code><big>listOf (patt, sep)</big></code>
+		<ul>Returns a pattern which matches a list of <code>patt</code>s, separated by <code>sep</code>.
+<p/>
+<strong>Example:</strong> matching comma-separated values:
+<pre class="example">
+<font color="#0000FF"><b>local</b></font> g, m = <b><font color ="#800040">require</font></b> <font color="#008000">'leg.grammar'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'lpeg'</font>
+
+<font color="#808080"> -- separator</font>
+<font color="#0000FF"><b>local</b></font> sep = <b>m.P</b><font color="#008000">','</font> + <b>m.P</b><font color="#008000">'\n'</font>
+
+<font color="#808080"> -- element: anything but sep, capture it</font>
+<font color="#0000FF"><b>local</b></font> elem = <b>m.C</b>((<font color="#B00000"><i>1</i></font> - sep)^<font color="#B00000"><i>0</i></font>)
+
+<font color="#808080"> -- pattern</font>
+<font color="#0000FF"><b>local</b></font> patt = <b>g.listOf</b>(elem, sep)
+
+<font color="#808080"> -- matching</font>
+<b><font color ="#800040">print</font></b>( <b>patt:match</b> <font color="#008000">[[a, b, 'christmas eve'
+ d, evening; mate!
+ f]]</font>)
+<font color="#808080"> --> prints out "a        b       'christmas eve'  d        evening; mate! f"</font>
+</pre>
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>patt</code>: a LPeg pattern.</li>
+<li><code>sep</code>: a LPeg pattern.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>the following pattern: <pre class="example">patt * (sep * patt)^<font color="#B00000"><i>0</i></font></pre></li></ul></ul>
+	
+		<p/><a name="function_pipe"></a>
+		<hr/><code><big>pipe (dest, orig)</big></code>
+		<ul><a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>.
+<p/>
+<code>dest</code> and <code>orig</code> should be tables, with each key storing a capture function. Each capture in <code>dest</code> will be altered to use the results for the matching one in <code>orig</code> as input, using function composition. Should <code>orig</code> possess keys not in <code>dest</code>, <code>dest</code> will copy them.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>dest</code>: a capture table.</li>
+<li><code>orig</code>: a capture table.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>dest</code>, suitably modified.</li></ul></ul>
 	
 	<hr/>
 

@@ -20,7 +20,7 @@
   <br/>
   
 	<div id="product_description"> <small><em> <b>Version:</b> 0.1 </em></small></div> 
-    <div id="product_description"> <small><em><b>Generated:</b> November 09, 2007 </em></small> </div>
+    <div id="product_description"> <small><em><b>Generated:</b> November 22, 2007 </em></small> </div>
   
 </div> <!-- id="product" -->
 
@@ -74,9 +74,9 @@
 	<li><a href="#functions"> Functions </a>
 		<ul>
 		
-			<li><code><a href="#function_check"> check </a></code></li>
-		
 			<li><code><a href="#function_apply"> apply </a></code></li>
+		
+			<li><code><a href="#function_check"> check </a></code></li>
 		
 		</ul>
 	</li>
@@ -121,7 +121,7 @@ The following convention is used for rule names:<ul>
 rules = {
   <font color="#808080"> -- See peculiarities below</font>
    IGNORED  = scanner.IGNORED <font color="#808080"> -- used as spacing, not depicted below</font>
-   EPSILON = lpeg.P(<font color="#0000FF"><b>true</b></font>)
+   EPSILON = <b>lpeg.P</b>(<font color="#0000FF"><b>true</b></font>)
    EOF     = scanner.EOF <font color="#808080"> -- end of file</font>
    BOF     = scanner.BOF <font color="#808080"> -- beginning of file</font>
    Name    = ID
@@ -251,29 +251,19 @@ A table holding the Lua 5.1 grammar. See <a href="#section_The_Grammar">The Gram
 	<table border="0" width="95%">
 	
 		<tr>
-			<!-- <td> <pre class="example"><big><strong><a href="#functions_check">check</a></strong></big> (input)</pre> </td> -->
-			<td> <code><big><strong> <a href="#function_check">check</a></strong></big> (input) </code> </td>
-			<td> Checks if <code>input</code> is valid Lua source code. </td>
-		</tr>
-	
-		<tr>
 			<!-- <td> <pre class="example"><big><strong><a href="#functions_apply">apply</a></strong></big> (extraRules, captures)</pre> </td> -->
 			<td> <code><big><strong> <a href="#function_apply">apply</a></strong></big> (extraRules, captures) </code> </td>
 			<td> Uses <a href="grammar.html#function_apply">grammar.apply</a> to return a new grammar, with <code>captures</code> and extra rules. <a href="#variable_rules">rules</a> stays unmodified. </td>
 		</tr>
 	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_check">check</a></strong></big> (input)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_check">check</a></strong></big> (input) </code> </td>
+			<td> Checks if <code>input</code> is valid Lua source code. </td>
+		</tr>
+	
 	</table>
 
-	
-		<p/><a name="function_check"></a>
-		<hr/><code><big>check (input)</big></code>
-		<ul>Checks if <code>input</code> is valid Lua source code.
-<p/>
-<strong>Parameters:</strong><ul>
-<li><code>input</code>: a string containing Lua source code.</li></ul>
-<p/>
-<strong>Returns:</strong><ul>
-<li><code>true</code>, if <code>input</code> is valid Lua source code, or <code>false</code> and an error message if the matching fails.</li></ul></ul>
 	
 		<p/><a name="function_apply"></a>
 		<hr/><code><big>apply (extraRules, captures)</big></code>
@@ -285,6 +275,16 @@ A table holding the Lua 5.1 grammar. See <a href="#section_The_Grammar">The Gram
 <p/>
 <strong>Returns:</strong><ul>
 <li>the extended grammar.</li></ul></ul>
+	
+		<p/><a name="function_check"></a>
+		<hr/><code><big>check (input)</big></code>
+		<ul>Checks if <code>input</code> is valid Lua source code.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>input</code>: a string containing Lua source code.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li><code>true</code>, if <code>input</code> is valid Lua source code, or <code>false</code> and an error message if the matching fails.</li></ul></ul>
 	
 	<hr/>
 
