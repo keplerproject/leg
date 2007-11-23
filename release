@@ -1,0 +1,28 @@
+$Id: release,v 1.1 2007/11/23 18:20:00 hanjos Exp $
+
+Version: 0.1.2
+========
+
+API
+===
+
+* grammar.lua received two new utility functions: anyOf and listOf
+
+Bugs
+====
+
+* adding scanner's keywords e symbols to parser's rules ended up altering 
+  scanner.keywords and scanner.symbols as well; using grammar.complete instead
+  of grammar.apply does the trick.
+
+Documentation
+=============
+
+* changes in the documentation generator made the new docs slightly different;
+  no big conceptual change.
+
+* an improved README file
+
+* a COPYRIGHT file with Leg's license
+
+* and this release file
