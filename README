@@ -53,8 +53,8 @@ Copyright
 See the file "COPYRIGHT".
 
 
-New Stuff
----------
+Bug Fixes and New Stuff
+-----------------------
 
 See the file "release".
 
@@ -73,6 +73,6 @@ Work to do
   under way.
 
 * The binary operators' precedences isn't enforced in the grammar; one must 
-  enforce it by hand when capturing expressions. This is annoying.
+  enforce it by hand when capturing expressions. This can be very annoying.
 
 * More thorough testing.

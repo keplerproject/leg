@@ -2,7 +2,7 @@
 <%
   project.title = "parser"
   project.description = "Lua 5.1 parser"
-  project.version = "0.1"
+  project.version = "0.1.2"
   project.date = _G.os.date'%B %d, %Y'
   project.modules = { 'grammar', 'parser', 'scanner' }
 %>
@@ -140,7 +140,7 @@ The implementation has certain peculiarities that merit clarification:
 * In Lua's [http://www.lua.org/manual/5.1/manual.html#8 original extended BNF grammar], `Var` and `FunctionCall` are defined using left recursion, which is unavailable in PEGs. In this implementation, the problem was solved by modifying the PEG rules to eliminate the left recursion, and by setting some markers (with some LPeg chicanery) to ensure the proper pattern is being used.
 --]]
 
--- $Id: parser.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
+-- $Id: parser.lua,v 1.3 2007/11/26 18:41:51 hanjos Exp $
 
 -- basic modules
 local _G     = _G

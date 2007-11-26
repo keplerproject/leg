@@ -1,19 +1,22 @@
-$Id: release,v 1.1 2007/11/23 18:20:00 hanjos Exp $
+$Id: release,v 1.2 2007/11/26 18:41:51 hanjos Exp $
 
 Version: 0.1.2
-========
+==============
 
 API
 ===
 
 * grammar.lua received two new utility functions: anyOf and listOf
 
-Bugs
-====
+Bugs Fixed
+==========
 
 * adding scanner's keywords e symbols to parser's rules ended up altering 
   scanner.keywords and scanner.symbols as well; using grammar.complete instead
   of grammar.apply does the trick.
+  
+* grammar.apply was inadvertently piping the captures to grammar instead of 
+  rules if rules was nil.
 
 Documentation
 =============

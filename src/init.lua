@@ -2,7 +2,7 @@
 <%
   project.title = "Leg"
   project.description = "LPeg-powered Lua 5.1 grammar"
-  project.version = "0.1"
+  project.version = "0.1.2"
   project.date = _G.os.date'%B %d, %Y'
   project.modules = { 'grammar', 'parser', 'scanner' }
 %>
@@ -39,7 +39,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 --]]
 
 
--- $Id: init.lua,v 1.1 2007/11/12 20:32:01 hanjos Exp $
+-- $Id: init.lua,v 1.2 2007/11/26 18:41:51 hanjos Exp $
 
 require 'leg.grammar'
 require 'leg.scanner'

@@ -1,6 +1,6 @@
 #
 # Makefile for Leg
-# $Id: Makefile,v 1.6 2007/11/23 18:15:42 hanjos Exp $
+# $Id: Makefile,v 1.7 2007/11/26 18:41:51 hanjos Exp $
 # 
 
 # ===== LUA PATHS =================
@@ -37,7 +37,7 @@ clean:
   # removing the source files and package
 	rm -r $(LUA_LIB)/$(NAME)
 
-document:
+documents:
 	# generate documentation
 	mkdir -p $(DOC_DIR)
 	$(DOCCER) src/*.lua
@@ -53,13 +53,4 @@ bundle:
 	gzip ../$(NAME)-$(VERSION).tar
 
 test:
-	@echo
-	@echo '==================== SCANNER ===================='
-	@echo
-	@lua $(TEST_DIR)/test_scanner.lua
-	@echo
-	@echo '==================== PARSER ===================='
-	@echo
-	@lua $(TEST_DIR)/test_parser.lua
-	@echo
-	@echo '==================== DONE! ===================='
+	cd tests; lua test.lua

@@ -2,7 +2,7 @@
 <%
   project.title = "grammar"
   project.description = "LPeg grammar manipulation"
-  project.version = "0.1"
+  project.version = "0.1.2"
   project.date = _G.os.date'%B %d, %Y'
   project.modules = { 'grammar', 'parser', 'scanner' }
 %>
@@ -177,7 +177,7 @@ The printed result is:
 --]=]
 
 
--- $Id: grammar.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
+-- $Id: grammar.lua,v 1.3 2007/11/26 18:41:51 hanjos Exp $
 
 -- basic functions
 local assert  = assert
@@ -353,26 +353,26 @@ end
 * `rules`, suitably augmented by `grammar` and `captures`.
 --]]
 function apply (grammar, rules, captures)
-	if rules ~= nil then
-		if type(rules) ~= 'table' then
-			rules = { rules }
-		end
-    
-    grammar = complete(rules, grammar)
-    
-		if type(grammar[1]) == 'string' then
-			rules[1] = lpeg.V(grammar[1])
-		end
-	end
-
+  if rules == nil then
+    rules = {}
+  elseif type(rules) ~= 'table' then
+    rules = { rules }
+  end
+  
+  complete(rules, grammar)
+  
+  if type(grammar[1]) == 'string' then
+    rules[1] = lpeg.V(grammar[1])
+  end
+	
 	if captures ~= nil then
 		assert(type(captures) == 'table', 'captures must be a table')
     
 		for rule, cap in pairs(captures) do
-			grammar[rule] = grammar[rule] / cap
+			rules[rule] = rules[rule] / cap
 		end
 	end
   
-	return grammar
+	return rules
 end
 
