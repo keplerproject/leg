@@ -59,6 +59,18 @@ Bug Fixes and New Stuff
 See the file "release".
 
 
+Testing
+-------
+
+You can either:
+
+* run `make test`; or
+
+* go to the directory `tests` and run `test.lua`.
+
+Both do the same thing.
+
+
 Work to do
 ----------
 
