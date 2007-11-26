@@ -22,27 +22,29 @@ Basic Installation
 
 There are three ways to install Leg:
 
+* `make install`
+
+  Run `make install`, and a directory called `leg` with the source files inside
+  will be put in a specific path. Tweak Makefile's LUA_LIB variable to 
+  indicate the appropriate path for your system; Makefile ships with it set 
+  to /usr/local/share/lua/5.1 . Make sure you have the proper permissions to
+  access the path you want; if not or in doubt, use the `make` option below.
+  
 * `make` or `make leg`
   
   A directory `leg` will be created in your working directory, with the 
   source files inside. Just put it in a LUA_PATH-visible place and you're 
   ready to go.
-
-* `make install`
-
-  If you have the proper permissions, you can run `make install` and the 
-  `leg` directory with the source files will be put in a specific path. 
-  Tweak Makefile's LUA_LIB variable to indicate the appropriate path for your 
-  system; Makefile ships with it set to /usr/local/share/lua/5.1 .
   
 * by hand
 
-  If you don't have or don't want to use `make`, you can just put all the 
-  files in `src` inside a directory called `leg`, and put that directory in 
-  your LUA_PATH.
+  If you don't have, don't want to or can't use `make`, you can just put all 
+  the files in `src` inside a directory called `leg`, and put that directory 
+  in your LUA_PATH.
 
-  Read the Lua Reference Manual for the LUA_PATH and the LUA_CPATH syntax
-  (http://www.lua.org/manual/5.1/manual.html#pdf-package.path).
+
+Read the Lua Reference Manual for the LUA_PATH and the LUA_CPATH syntax
+(http://www.lua.org/manual/5.1/manual.html#pdf-package.path).
 
 
 Copyright
@@ -69,5 +71,8 @@ Work to do
   requires some fine tuning to make sure it works correctly. Metalua's API 
   seems interesting, and was originally based on Parsec. Investigation is 
   under way.
+
+* The binary operators' precedences isn't enforced in the grammar; one must 
+  enforce it by hand when capturing expressions. This is annoying.
 
 * More thorough testing.
