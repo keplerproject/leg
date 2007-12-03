@@ -1,11 +1,11 @@
 -------------------------------------------------------------------------------
 -- 
 -- An AST builder for Leg. This AST is from Metalua 
--- (http://metalua.luaforge.net)
+-- (http://metalua.luaforge.net).
 --
 -- Author: Humberto Anjos (the code below) and Fabien Fleutot (the AST design)
 -- 
--- $Id: metalua-ast.lua,v 1.1 2007/12/03 16:17:11 hanjos Exp $
+-- $Id: metalua-ast.lua,v 1.2 2007/12/03 20:46:16 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
@@ -174,7 +174,7 @@ end
 
 -- Takes a list of tokens with Lua values and operators and returns it in 
 -- Reverse Polish Notation, using Dijkstra's shunting yard algorithm. The 
--- actual tree will be built in Exp's capture
+-- actual expression tree will be built in Exp's capture function
 local function toRPN(list)
   local queue = {}
   local stack = {}
@@ -308,7 +308,7 @@ captures = {
       return list[1] 
     end
     
-    local listRPN = toRPN(list)
+    local listRPN = toRPN(list) -- putting the list in RPN
     local stack = {}
     
     for _, v in ipairs(listRPN) do
@@ -344,23 +344,23 @@ captures = {
 	end,
 	
 	_PrefixExpDot   = function (ID)
-    -- the hole will be filled later
+    -- the hole will be filled in _PrefixExp
 		return builder.Index(hole, builder.String(ID))
 	end,
 	
   _PrefixExpSquare = function (Exp)
-    -- the hole will be filled later
+    -- the hole will be filled in _PrefixExp
 		return builder.Index(hole, Exp) 
   end,
   
 	_PrefixExpColon = function (ID, _PrefixExpArgs)
-		-- the hole will be filled later
+		-- the hole will be filled in _PrefixExp
     return builder.Method(hole, builder.String(ID), 
       select(2, unpack(_PrefixExpArgs)))
 	end,
 	
   _PrefixExpArgs  = function (Args)
-		-- the hole will be filled later
+		-- the hole will be filled in _PrefixExp
 		return builder.Call(hole, unpack(Args))
 	end,
 
@@ -452,7 +452,7 @@ captures = {
 -- the matching pattern
 local patt = P( parser.apply(nil, captures) )
 
--- Takes a string, checking if it's syntactically valid Lua 5.1 code. If it
+-- Takes a string and checks if it's syntactically valid Lua 5.1 code. If it
 -- is, the corresponding AST is built and returned; if not, an error is thrown.
 function build(input)
   local result, msg = parser.check(input) 
@@ -668,5 +668,5 @@ subject = args[1] or [=[
   local function ascii2() return [[ascii2!]], whatever end
 ]=]
 
-print('subject:\n'..subject)
-print('result:\n'..ast2string(build(subject), 80, 'nohash'))
+print('subject:', '\n'..subject)
+print('result:', '\n'..ast2string(build(subject), 80, 'nohash'))
