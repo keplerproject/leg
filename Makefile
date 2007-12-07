@@ -1,6 +1,6 @@
 #
 # Makefile for Leg
-# $Id: Makefile,v 1.7 2007/11/26 18:41:51 hanjos Exp $
+# $Id: Makefile,v 1.8 2007/12/07 14:23:56 hanjos Exp $
 # 
 
 # ===== LUA PATHS =================
@@ -10,7 +10,7 @@ LUA_LIB = /usr/local/share/lua/5.1
 # ===== PROJECT INFO ==============
 # project info
 NAME = leg
-VERSION = 0.1.2
+VERSION = 0.2
 
 # project directories
 DOC_DIR = doc
@@ -31,7 +31,7 @@ install:
   # copying the source files to LUA_LIB
 	mkdir -p $(LUA_LIB)/$(NAME)
 	rm -f $(LUA_LIB)/$(NAME)/*.lua
-	cp src/*.lua $(LUA_LIB)/$(NAME)
+	cp -r src/* $(LUA_LIB)/$(NAME)
 
 clean:
   # removing the source files and package

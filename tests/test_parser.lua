@@ -4,35 +4,110 @@
 -- Authors: Humberto Anjos and Francisco Sant'Anna
 -- Copyright (c) 2007 Leg
 --
--- $Id: test_parser.lua,v 1.2 2007/11/22 21:15:24 hanjos Exp $
+-- $Id: test_parser.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
-local lpeg = require 'lpeg'
-local parser = require 'leg.parser'
+local lpeg    = require 'lpeg'
+local parser  = require 'leg.parser'
 
 local function TEST (rule, tests)
 	io.write(string.format("%-26s", 'Testing '..rule..': ')) io.flush()
 	local G = lpeg.P( parser.apply(lpeg.V(rule)) )
 	
 	for i, subject in ipairs(tests) do
-		io.write(i..'... ') io.flush()
-		
-		if string.sub(subject, 1, 1) == '!' then
-			subject = string.sub(subject, 2)
-			
-			local G = G * function(subject) print() error('"'..subject..'": should not match') end
-			G:match(subject)
-		else
-			local G = G + function(subject) print() error('"'..subject..'": should match')     end
-			G:match(subject)
-		end
+    local limit
+    if type(subject) == 'table' then
+      subject, limit = subject[1], subject[2]
+    end
+    
+    io.write(i..'... ') io.flush()
+      
+    if string.sub(subject, 1, 1) == '!' then
+      subject = string.sub(subject, 2)
+      
+      local G = G * function(subject) 
+          print()
+          error('"'..subject..'": should not match')
+        end
+      
+      G:match(subject)
+    else
+      local G = G + function(subject) 
+          print()
+          error('"'..subject..'": should match')
+        end
+      
+      if limit then
+        local actualMatch = G:match(subject)
+        assert(actualMatch == limit, '"'..subject:sub(1, actualMatch)..'" is not the right match for "'..subject:sub(1, limit)..'"!')
+      else
+        G:match(subject)
+      end
+    end
 	end
 	
 	print'OK!'
 end
 
-TEST('UnOp', { '-', 'not', '#', '!--', '!anot', '!nota' })
+-- Lexical patterns
+TEST('ID', { '!and', { 'andale', 7 }, { 'make-name', 5 }, { 'one two three', 4 }, '!!name$', { 'aãoéç', 6 }, { '_123', 5 }, '!1abc', { 'abc1234', 8 }, { '___', 4 }, { '\127\128\129ç', 5 }})
+
+TEST('Symbol', { '+', '-', '*', '/', '^', '%', '..', '<', '<=', '>', '>=', 
+  '==', '~=', '!@', '!$' } )
+  
+TEST('NUMBER', { '465', 
+  '001234567890', 
+  '.123', 
+  '1.', 
+  '12.343', 
+  '0x7a2fF', 
+  '!ff', 
+  '1e-23', 
+  '9.045e+3', 
+  '.00678e2', 
+  '!1.23e4e5', 
+  '!-.1', 
+  '!123and' })
+  
+TEST('STRING', { "'What a pity...'", 
+  "'What \065 \112\105\116\121...'", 
+  "!'what?", 
+  "!'what\n?'", 
+  "'what\\\n?'", 
+  "'What a \\'pity\\'...'", 
+  "'What a \"pity\"...'", 
+  '"What a pity..."', 
+  '"What \065 \112\105\116\121..."', 
+  '!"what?', 
+  '!"what\n?"', 
+  '"what\\\n?"',
+  '"What a \\"pity\\"..."', 
+  '"What a \'pity\'..."', 
+  "[[If not for you...]]",
+  "[[something\n\or\nanother]]", 
+  "[=[fantasy for sale [[that's entertainment!]]]=]", 
+  "[[Package it like a \"rebel\" or a 'hero']]",
+  "![=[[[Reality]] withdraws"
+  })
+
+TEST('COMMENT', { { '-- single line comment\nsome code here', 23 }, 
+  '-- she can manipulate reactions', 
+  '--[[superconductor!\nThat\'s entertainment!]]',
+  '--[[superconductor!\nThat\'s entertainment!\n--]]',
+  '!--[[<waiting for The Clansman to start>',
+  '--[=[That belongs to --[[the clan]]]=]',
+  [===[--[[ multi-line
+--[==[
+asdaks \n
+-- --[[ deve pegar comment multi-line
+--print'oi' ]] ]===],
+  })
+
+TEST('Keyword', { { 'or', 3 } , '!OR', '!andale', { 'while something', 6 }, '!make-name', '!+ while', '!yadda_not', '!notyabbadabbadoo'})
+
+-- Grammar patterns
+TEST('UnOp', { '-', { 'not', 4 } , '#', '!--', '!anot', '!nota' })
 TEST('BinOp', { '+', '-', '*', '/', '^', '%', '..', '<', '<=', '>', '>=', '==', '~=', 'and', 'or' })
 TEST('FieldSep', { ',', ';' })
 TEST('Field', { '[a] = f(1)', 'a.name().name', 'name = 1' })

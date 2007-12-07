@@ -2,9 +2,9 @@
 <%
   project.title = "grammar"
   project.description = "LPeg grammar manipulation"
-  project.version = "0.1.2"
+  project.version = "0.2"
   project.date = _G.os.date'%B %d, %Y'
-  project.modules = { 'grammar', 'parser', 'scanner' }
+  project.modules = { 'grammar', 'parser' }
 %>
 
 # Description
@@ -90,21 +90,28 @@ subject = %[%[
 
 In the code above only `sum` and `something:other` should be documented, as `f1` isn't properly (by our standards) declared and `aux` is not in the outermost scope. 
 
-By combining [http://www.inf.puc-rio.br/~roberto/lpeg.html LPeg] and the modules [scanner.html scanner], [parser.html parser] and [grammar.html grammar], this specific problem can be solved as follows:
+By combining [http://www.inf.puc-rio.br/~roberto/lpeg.html LPeg] and the modules [parser.html parser] and [grammar.html grammar], this specific problem can be solved as follows:
 
 ``
+-- -- ye olde imports
+local parser, grammar = require 'leg.parser', require 'leg.grammar'
+local lpeg = require 'lpeg'
+
+-- -- a little aliasing never hurt anyone
+local P, V = lpeg.P, lpeg.V
+
 -- -- change only the initial rule and make no captures
-patt = grammar.apply(parser.rules, scanner.COMMENT^-1 %* lpeg.V'GlobalFunction', nil)
+patt = grammar.apply(parser.rules, parser.COMMENT^-1 %* V'GlobalFunction', nil)
 
 -- -- transform the new grammar into a LPeg pattern
-patt = lpeg.P(patt)
+patt = P(patt)
 
 -- -- making a pattern that matches any Lua statement, also without captures
-Stat = lpeg.P( grammar.apply(parser.rules, lpeg.V'Stat', nil) )
+Stat = P( grammar.apply(parser.rules, V'Stat', nil) )
 
 -- -- a pattern which matches function declarations and skips statements in
 -- -- inner scopes or undesired tokens
-patt = (patt + Stat + scanner.ANY)^0
+patt = (patt + Stat + parser.ANY)^0
 
 -- -- matching a string
 patt:match(subject)
@@ -118,8 +125,8 @@ FuncName     = ID %* ('.' %* ID)^0 %* (':' %* ID)^-1
 FuncBody     = '(' %* (ParList + EPSILON) %* ')' %* Block %* 'end'
 ParList      = NameList %* (',' %* '...')^-1
 NameList     = ID %* (',' %* ID)^0
-ID           = scanner.ID
-EPSILON      = lpeg.P(true)
+ID           = parser.IDENTIFIER
+EPSILON      = P(true)
 ``
 
 It may seem that `ParList + EPSILON` could be substituted for `ParList^-1` (optionally match `ParList`), but then no captures would be made for empty parameter lists, and `GlobalFunction` would get all strings matched by `FuncBody`. The `EPSILON` rule acts in this manner as a placeholder in the argument list, avoiding any argument list processing in the capture function.
@@ -141,23 +148,23 @@ captures = {
   
   FuncName = grammar.C, -- capture the raw text
   ParList  = grammar.C, -- capture the raw text
-  COMMENT  = scanner.comment2text, -- remove the comment trappings
+  COMMENT  = parser.comment2text, -- remove the comment trappings
 }
 
 -- -- spacing rule
-local S = scanner.SPACE ^ 0
+local S = parser.SPACE ^ 0
 
 -- -- rules table
 rules = {
-  %[1%]     = ((lpeg.V'COMMENT' %*S) ^ 0) %*S%* lpeg.V'GlobalFunction',
-  COMMENT = scanner.COMMENT,
+  %[1%]     = ((V'COMMENT' %*S) ^ 0) %*S%* V'GlobalFunction',
+  COMMENT = parser.COMMENT,
 }
 
 -- -- building the new grammar and adding the captures
-patt = lpeg.P( grammar.apply(parser.rules, rules, captures) )
+patt = P( grammar.apply(parser.rules, rules, captures) )
 
 -- -- a pattern that matches a sequence of patts and concatenates the results
-patt = (patt + Stat + scanner.ANY)^0 / function(...) 
+patt = (patt + Stat + parser.ANY)^0 / function(...) 
   return table.concat({...}, '\n\n') -- some line breaks for easier reading
 end
 
@@ -176,13 +183,19 @@ The printed result is:
 </pre>
 --]=]
 
+-- $Id: grammar.lua,v 1.4 2007/12/07 14:23:56 hanjos Exp $
 
--- $Id: grammar.lua,v 1.3 2007/11/26 18:41:51 hanjos Exp $
+-- basic modules
+local _G    = _G
+local table = table
 
 -- basic functions
 local assert  = assert
+local ipairs  = ipairs
 local pairs   = pairs
+local pcall   = pcall
 local type    = type
+local unpack  = unpack
 
 -- imported modules
 local lpeg = require 'lpeg'
@@ -194,28 +207,54 @@ local P, V = lpeg.P, lpeg.V
 module 'leg.grammar'
 
 --[[ 
-Returns a pattern which matches any of the patterns received.
+Returns a pattern which matches any of the patterns in `t`.
+
+The iterator `pairs` is used to traverse `t`, so no particular traversal order
+is guaranteed. Use [#function_oneOf oneOf] to ensure sequential matching 
+attempts.
 
 **Example:**
 ``
-local g, s, m = require 'leg.grammar', require 'leg.scanner', require 'lpeg'
+local g, p, m = require 'leg.grammar', require 'leg.parser', require 'lpeg'
 
 -- -- match numbers or operators, capture the numbers
-print( (g.anyOf { '+', '-', '%*', '/', m.C(s.NUMBER) }):match '34.5@23 %* 56 / 45 - 45' )
+print( (g.anyOf { '+', '-', '%*', '/', m.C(p.NUMBER) }):match '34.5@23 %* 56 / 45 - 45' )
 -- --> prints 34.5
 ``
 
 **Parameters:**
-* `list`: a list of zero or more LPeg patterns or values which can be fed to [http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg lpeg.P].
+* `t`: a table with LPeg patterns as values. The keys are ignored.
 
 **Returns:**
 * a pattern which matches any of the patterns received.
 --]]
-function anyOf(list)
+function anyOf(t)
   local patt = P(false)
   
-  for i = 1, #list, 1 do
-    patt = P(list[i]) + patt
+  for _, v in pairs(t) do
+    patt = P(v) + patt
+  end
+  
+  return patt
+end
+
+--[[ 
+Returns a pattern which matches any of the patterns in `list`.
+
+Differently from [#function_anyOf anyOf], this function ensures sequential 
+traversing.
+
+**Parameters:**
+* `list`: a list of LPeg patterns.
+
+**Returns:**
+* a pattern which matches any of the patterns received.
+--]]
+function oneOf(list)
+  local patt = P(false)
+  
+  for _, v in ipairs(list) do
+    patt = P(v) + patt
   end
   
   return patt
@@ -257,6 +296,20 @@ function listOf(patt, sep)
   return patt * (sep * patt)^0
 end
 
+--[[
+Returns a pattern which searches for the pattern `patt` anywhere in a string.
+
+This code was extracted from the [http://www.inf.puc-rio.br/~roberto/lpeg.html#ex LPeg home page], in the examples section.
+
+**Parameters:**
+* `patt`: a LPeg pattern.
+
+**Returns:**
+* a LPeg pattern which searches for `patt` anywhere in the string.
+--]]
+function anywhere(patt)
+  return P { P(patt) + 1 * V(1) }
+end
 
 --[[ 
 A capture function, made so that `patt / C` is equivalent to `m.C(patt)`. It's intended to be used in capture tables, such as those required by [#function_pipe pipe] and [#function_apply apply].
@@ -337,7 +390,7 @@ end
 
 `rules` can either be:
 * a single pattern, which is taken to be the new initial rule, 
-* a possibly incomplete LPeg grammar, as per [#function_complete complete], or 
+* a possibly incomplete LPeg grammar table, as per [#function_complete complete], or 
 * `nil`, which means no new rules are added.
 
 `captures` can either be:
@@ -362,7 +415,7 @@ function apply (grammar, rules, captures)
   complete(rules, grammar)
   
   if type(grammar[1]) == 'string' then
-    rules[1] = lpeg.V(grammar[1])
+    rules[1] = V(grammar[1])
   end
 	
 	if captures ~= nil then
@@ -376,3 +429,27 @@ function apply (grammar, rules, captures)
 	return rules
 end
 
+--[[
+Returns a pattern which simply fails to match if an error is thrown during the matching.
+
+One usage example is [parser.html#variable_NUMBER parser.NUMBER]. Originally it threw an error when trying to match a malformed number (such as 1e23e4), since in this case the input is obviously invalid and the pattern would be part of the Lua grammar. So [#function_pmatch pmatch] is used to catch the error and return `nil` (signalling a non-match) and the error message.
+
+**Parameters:**
+* `patt`: a LPeg pattern.
+
+**Returns:**
+* a pattern which catches any errors thrown during the matching and simply doesn't match instead of propagating the error.
+--]]
+function pmatch(patt)
+  patt = P(patt)
+  return P(function (subject, i)
+    local results = { pcall(patt.match, patt, subject, i) }
+    local status = table.remove(results, 1)
+    
+    if status then
+      return unpack(results)
+    else
+      return nil, unpack(results)
+    end
+  end)
+end

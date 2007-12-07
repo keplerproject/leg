@@ -1,14 +1,14 @@
 -------------------------------------------------------------------------------
 -- 
 -- A preprocessor which transforms a switch construct (called 'match' here) 
--- into a sequence of if-elseif blocks. There is quite a discussion going on
--- (again...) about adding switch statements in Lua 
+-- into a sequence of if-elseif blocks. There was quite a discussion going on
+-- (again...) about adding switch statements to Lua 
 -- (http://lua-users.org/lists/lua-l/2007-11/msg00099.html), so I decided to 
 -- use it as a demonstration of Leg's capabilities.
 --
 -- Author: Humberto Anjos
 -- 
--- $Id: switch-macro.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+-- $Id: switch-macro.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
@@ -104,11 +104,6 @@ subject = args[1] or [=[
 --   unique in the program. But, for this example, naming it __temp__ and 
 --   restricting its scope will do the trick.
 -- 
--- * The local declaration will always be generated, even if there are no 
---   clauses to match. This is done because the expression in the local 
---   declaration might have side effects, which affect program semantics even
---   if no match is made.
--- 
 -- * The default case, if present, must be the last clause.
 -- 
 -- * If there's only the default case, the local declaration and the default 
@@ -116,6 +111,10 @@ subject = args[1] or [=[
 -- 
 -- * If there are no cases and no default case, only the local declaration will
 --   be generated. 
+-- 
+-- * The local declaration will always be generated, because the expression 
+--   in the local declaration might have side effects, which affect program 
+--   semantics even if no match is made.
 -- 
 -- * Some comments are captured, some are not. The comments captured are those
 --   which are in the middle or at the end of a <block> statement, and are 
@@ -132,7 +131,7 @@ subject = args[1] or [=[
 --   This is left as an exercise to the reader *shameless cop-out*.
 
 -- spacing
-local S = V'IGNORED' -- parser.rules.IGNORED or scanner.IGNORED could be used
+local S = V'IGNORED' -- parser.rules.IGNORED could be used
 
 -- epsilon rule
 local EPSILON = V'EPSILON' / function () end

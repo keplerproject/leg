@@ -5,7 +5,7 @@
 --
 -- Author: Humberto Anjos
 -- 
--- $Id: syntax-highlighting.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+-- $Id: syntax-highlighting.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 --
 -------------------------------------------------------------------------------
 
@@ -13,7 +13,6 @@
 local lpeg = require 'lpeg'
 
 local leg     = require 'leg'
-local scanner = leg.scanner
 local parser  = leg.parser
 
 -- aliasing...
@@ -63,30 +62,30 @@ local numberColor   = '#B00000' -- red
 local keywordColor  = '#0000FF' -- blue
 
 -- the patterns...
-local COMMENT = scanner.COMMENT / function (c) 
+local COMMENT = parser.COMMENT / function (c) 
   return '<font color="'..commentColor..'"> '..c..'</font>' 
 end
 
-local STRING = scanner.STRING / function (c) 
+local STRING = parser.STRING / function (c) 
   return '<font color="'..stringColor..'">'..c..'</font>' 
 end
 
-local NUMBER = scanner.NUMBER / function (c)
+local NUMBER = parser.NUMBER / function (c)
   return '<i><font color="'..numberColor..'">'..c..'</font></i>' 
 end
 
-local KEYWORD = scanner.KEYWORD / function (c) 
+local KEYWORD = parser.KEYWORD / function (c) 
   return '<b><font color="'..keywordColor..'">'..c..'</font></b>' 
 end
 
 -- opening tags
-local BOF = scanner.BOF / function () return '<html><body><pre>' end
+local BOF = parser.BOF / function () return '<html><body><pre>' end
 
 -- closing tags
-local EOF = scanner.EOF / function () return '</pre></body></html>' end
+local EOF = parser.EOF / function () return '</pre></body></html>' end
 
 -- this is here just to keep identifiers like bin2c from being parsed by NUMBER
-local ID = scanner.IDENTIFIER
+local ID = parser.IDENTIFIER
 
 -- the substitution pattern. BOF and EOF are there to ensure that the
 -- opening and closing tags are there to make the result a valid HTML page.

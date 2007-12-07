@@ -16,12 +16,12 @@
 -- 
 -- Author: Humberto Anjos
 -- 
--- $Id: local-imports.lua,v 1.1 2007/12/03 20:46:16 hanjos Exp $
+-- $Id: local-imports.lua,v 1.2 2007/12/07 14:23:56 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
 -- imported modules
-local scanner = require 'leg.scanner'
+local parser = require 'leg.parser'
 
 local lpeg = require 'lpeg'
 
@@ -66,7 +66,7 @@ local function buildStatements(list, type)
 end
 
 local modules, functions = {}, {}
-local ID = scanner.IDENTIFIER / function (id)
+local ID = parser.IDENTIFIER / function (id)
     if basicModules[id] and not modules[id] then
       modules[#modules + 1] = id
       modules[id] = #modules
@@ -79,9 +79,19 @@ local ID = scanner.IDENTIFIER / function (id)
 local ALL = P( (ID + 1)^0 ) 
 
 -- TESTING ----------------------------
-local args = { ... }
+local args, input = { ... }, nil
 
-subject = args[1] or [=[
+if args[1] then
+  input = io.open(args[1], 'r')
+
+  if input then -- it's a file
+    input = input:read'*a'
+  else -- it's a string with code
+    input = args[1]
+  end
+end
+
+subject = input or [=[
 local a = _VERSION or math.pi
 local table = {} -- false positive
 
@@ -97,5 +107,8 @@ ALL:match(subject)
 result = buildStatements(modules, 'modules')..'\n'
   ..buildStatements(functions, 'functions')..'\n-- code\n'
   ..subject
-print('subject:', '\n'..subject)
-print('result:', '\n'..result)
+
+--print('subject:', '\n'..subject)
+--print('\nresult:', '\n'..result)
+
+print(result)

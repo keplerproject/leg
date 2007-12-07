@@ -19,8 +19,8 @@
 	<div id="product_description"> LPeg grammar manipulation </div>
   <br/>
   
-	<div id="product_description"> <small><em> <b>Version:</b> 0.1.2 </em></small></div> 
-    <div id="product_description"> <small><em><b>Generated:</b> November 26, 2007 </em></small> </div>
+	<div id="product_description"> <small><em> <b>Version:</b> 0.2 </em></small></div> 
+    <div id="product_description"> <small><em><b>Generated:</b> December 07, 2007 </em></small> </div>
   
 </div> <!-- id="product" -->
 
@@ -31,7 +31,6 @@
 <ul>
     <li><a href="grammar.html">grammar</a></li>
     <li><a href="parser.html">parser</a></li>
-    <li><a href="scanner.html">scanner</a></li>
   </ul>
 <br/>
 <h1>grammar</h1>
@@ -86,6 +85,8 @@
 		
 			<li><code><a href="#function_anyOf"> anyOf </a></code></li>
 		
+			<li><code><a href="#function_anywhere"> anywhere </a></code></li>
+		
 			<li><code><a href="#function_apply"> apply </a></code></li>
 		
 			<li><code><a href="#function_C"> C </a></code></li>
@@ -98,7 +99,11 @@
 		
 			<li><code><a href="#function_listOf"> listOf </a></code></li>
 		
+			<li><code><a href="#function_oneOf"> oneOf </a></code></li>
+		
 			<li><code><a href="#function_pipe"> pipe </a></code></li>
+		
+			<li><code><a href="#function_pmatch"> pmatch </a></code></li>
 		
 		</ul>
 	</li>
@@ -198,21 +203,28 @@ subject = <font color="#008000">[[
 <p/>
 In the code above only <code>sum</code> and <code>something:other</code> should be documented, as <code>f1</code> isn't properly (by our standards) declared and <code>aux</code> is not in the outermost scope. 
 <p/>
-By combining <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> and the modules <a href="scanner.html">scanner</a>, <a href="parser.html">parser</a> and <a href="grammar.html">grammar</a>, this specific problem can be solved as follows:
+By combining <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html">LPeg</a> and the modules <a href="parser.html">parser</a> and <a href="grammar.html">grammar</a>, this specific problem can be solved as follows:
 <p/>
 <pre class="example">
+<font color="#808080"> -- ye olde imports</font>
+<font color="#0000FF"><b>local</b></font> parser, grammar = <b><font color ="#800040">require</font></b> <font color="#008000">'leg.parser'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'leg.grammar'</font>
+<font color="#0000FF"><b>local</b></font> lpeg = <b><font color ="#800040">require</font></b> <font color="#008000">'lpeg'</font>
+
+<font color="#808080"> -- a little aliasing never hurt anyone</font>
+<font color="#0000FF"><b>local</b></font> P, V = lpeg.P, lpeg.V
+
 <font color="#808080"> -- change only the initial rule and make no captures</font>
-patt = <b>grammar.apply</b>(parser.rules, scanner.COMMENT^-<font color="#B00000"><i>1</i></font> * <b>lpeg.V</b><font color="#008000">'GlobalFunction'</font>, <font color="#0000FF"><b>nil</b></font>)
+patt = <b>grammar.apply</b>(parser.rules, parser.COMMENT^-<font color="#B00000"><i>1</i></font> * <b>V</b><font color="#008000">'GlobalFunction'</font>, nil)
 
 <font color="#808080"> -- transform the new grammar into a LPeg pattern</font>
-patt = <b>lpeg.P</b>(patt)
+patt = <b>P</b>(patt)
 
 <font color="#808080"> -- making a pattern that matches any Lua statement, also without captures</font>
-Stat = <b>lpeg.P</b>( <b>grammar.apply</b>(parser.rules, <b>lpeg.V</b><font color="#008000">'Stat'</font>, <font color="#0000FF"><b>nil</b></font>) )
+Stat = <b>P</b>( <b>grammar.apply</b>(parser.rules, <b>V</b><font color="#008000">'Stat'</font>, nil) )
 
 <font color="#808080"> -- a pattern which matches function declarations and skips statements in</font>
 <font color="#808080"> -- inner scopes or undesired tokens</font>
-patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font>
+patt = (patt + Stat + parser.ANY)^<font color="#B00000"><i>0</i></font>
 
 <font color="#808080"> -- matching a string</font>
 <b>patt:match</b>(subject)
@@ -226,8 +238,8 @@ FuncName     = ID * (<font color="#008000">'.'</font> * ID)^<font color="#B00000
 FuncBody     = <font color="#008000">'('</font> * (ParList + EPSILON) * <font color="#008000">')'</font> * Block * <font color="#008000">'end'</font>
 ParList      = NameList * (<font color="#008000">','</font> * <font color="#008000">'...'</font>)^-<font color="#B00000"><i>1</i></font>
 NameList     = ID * (<font color="#008000">','</font> * ID)^<font color="#B00000"><i>0</i></font>
-ID           = scanner.ID
-EPSILON      = <b>lpeg.P</b>(<font color="#0000FF"><b>true</b></font>)
+ID           = parser.IDENTIFIER
+EPSILON      = <b>P</b>(<font color="#0000FF"><b>true</b></font>)
 </pre>
 <p/>
 It may seem that <code>ParList + EPSILON</code> could be substituted for <code>ParList^-1</code> (optionally match <code>ParList</code>), but then no captures would be made for empty parameter lists, and <code>GlobalFunction</code> would get all strings matched by <code>FuncBody</code>. The <code>EPSILON</code> rule acts in this manner as a placeholder in the argument list, avoiding any argument list processing in the capture function.
@@ -249,23 +261,23 @@ captures = {
  
  FuncName = grammar.C, <font color="#808080"> -- capture the raw text</font>
  ParList  = grammar.C, <font color="#808080"> -- capture the raw text</font>
- COMMENT  = scanner.comment2text, <font color="#808080"> -- remove the comment trappings</font>
+ COMMENT  = parser.comment2text, <font color="#808080"> -- remove the comment trappings</font>
 }
 
 <font color="#808080"> -- spacing rule</font>
-<font color="#0000FF"><b>local</b></font> S = scanner.SPACE ^ <font color="#B00000"><i>0</i></font>
+<font color="#0000FF"><b>local</b></font> S = parser.SPACE ^ <font color="#B00000"><i>0</i></font>
 
 <font color="#808080"> -- rules table</font>
 rules = {
- [<font color="#B00000"><i>1</i></font>]     = ((<b>lpeg.V</b><font color="#008000">'COMMENT'</font> *S) ^ <font color="#B00000"><i>0</i></font>) *S* <b>lpeg.V</b><font color="#008000">'GlobalFunction'</font>,
- COMMENT = scanner.COMMENT,
+ [<font color="#B00000"><i>1</i></font>]     = ((<b>V</b><font color="#008000">'COMMENT'</font> *S) ^ <font color="#B00000"><i>0</i></font>) *S* <b>V</b><font color="#008000">'GlobalFunction'</font>,
+ COMMENT = parser.COMMENT,
 }
 
 <font color="#808080"> -- building the new grammar and adding the captures</font>
-patt = <b>lpeg.P</b>( <b>grammar.apply</b>(parser.rules, rules, captures) )
+patt = <b>P</b>( <b>grammar.apply</b>(parser.rules, rules, captures) )
 
 <font color="#808080"> -- a pattern that matches a sequence of patts and concatenates the results</font>
-patt = (patt + Stat + scanner.ANY)^<font color="#B00000"><i>0</i></font> / <font color="#0000FF"><b>function</b></font>(...) 
+patt = (patt + Stat + parser.ANY)^<font color="#B00000"><i>0</i></font> / <font color="#0000FF"><b>function</b></font>(...) 
  <font color="#0000FF"><b>return</b></font> <font color = "#800040"><b>table.concat</b></font>({...}, <font color="#008000">'\n\n'</font>) <font color="#808080"> -- some line breaks for easier reading</font>
 <font color="#0000FF"><b>end</b></font>
 
@@ -284,7 +296,6 @@ The printed result is:
 </pre>
 <p/>
 <p/>
-<p/>
 
 
 
@@ -295,9 +306,15 @@ The printed result is:
 	<table border="0" width="95%">
 	
 		<tr>
-			<!-- <td> <pre class="example"><big><strong><a href="#functions_anyOf">anyOf</a></strong></big> (list)</pre> </td> -->
-			<td> <code><big><strong> <a href="#function_anyOf">anyOf</a></strong></big> (list) </code> </td>
-			<td> Returns a pattern which matches any of the patterns received. </td>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_anyOf">anyOf</a></strong></big> (t)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_anyOf">anyOf</a></strong></big> (t) </code> </td>
+			<td> Returns a pattern which matches any of the patterns in <code>t</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_anywhere">anywhere</a></strong></big> (patt)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_anywhere">anywhere</a></strong></big> (patt) </code> </td>
+			<td> Returns a pattern which searches for the pattern <code>patt</code> anywhere in a string. </td>
 		</tr>
 	
 		<tr>
@@ -337,32 +354,60 @@ The printed result is:
 		</tr>
 	
 		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_oneOf">oneOf</a></strong></big> (list)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_oneOf">oneOf</a></strong></big> (list) </code> </td>
+			<td> Returns a pattern which matches any of the patterns in <code>list</code>. </td>
+		</tr>
+	
+		<tr>
 			<!-- <td> <pre class="example"><big><strong><a href="#functions_pipe">pipe</a></strong></big> (dest, orig)</pre> </td> -->
 			<td> <code><big><strong> <a href="#function_pipe">pipe</a></strong></big> (dest, orig) </code> </td>
 			<td> <a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>. </td>
+		</tr>
+	
+		<tr>
+			<!-- <td> <pre class="example"><big><strong><a href="#functions_pmatch">pmatch</a></strong></big> (patt)</pre> </td> -->
+			<td> <code><big><strong> <a href="#function_pmatch">pmatch</a></strong></big> (patt) </code> </td>
+			<td> Returns a pattern which simply fails to match if an error is thrown during the matching. </td>
 		</tr>
 	
 	</table>
 
 	
 		<p/><a name="function_anyOf"></a>
-		<hr/><code><big>anyOf (list)</big></code>
-		<ul>Returns a pattern which matches any of the patterns received.
+		<hr/><code><big>anyOf (t)</big></code>
+		<ul>Returns a pattern which matches any of the patterns in <code>t</code>.
+<p/>
+The iterator <code>pairs</code> is used to traverse <code>t</code>, so no particular traversal order
+is guaranteed. Use <a href="#function_oneOf">oneOf</a> to ensure sequential matching 
+attempts.
 <p/>
 <strong>Example:</strong>
 <pre class="example">
-<font color="#0000FF"><b>local</b></font> g, s, m = <b><font color ="#800040">require</font></b> <font color="#008000">'leg.grammar'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'leg.scanner'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'lpeg'</font>
+<font color="#0000FF"><b>local</b></font> g, p, m = <b><font color ="#800040">require</font></b> <font color="#008000">'leg.grammar'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'leg.parser'</font>, <b><font color ="#800040">require</font></b> <font color="#008000">'lpeg'</font>
 
 <font color="#808080"> -- match numbers or operators, capture the numbers</font>
-<b><font color ="#800040">print</font></b>( (<b>g.anyOf</b> { <font color="#008000">'+'</font>, <font color="#008000">'-'</font>, <font color="#008000">'*'</font>, <font color="#008000">'/'</font>, <b>m.C</b>(s.NUMBER) }):match <font color="#008000">'34.5@23 * 56 / 45 - 45'</font> )
+<b><font color ="#800040">print</font></b>( (<b>g.anyOf</b> { <font color="#008000">'+'</font>, <font color="#008000">'-'</font>, <font color="#008000">'*'</font>, <font color="#008000">'/'</font>, <b>m.C</b>(p.NUMBER) }):match <font color="#008000">'34.5@23 * 56 / 45 - 45'</font> )
 <font color="#808080"> --> prints 34.5</font>
 </pre>
 <p/>
 <strong>Parameters:</strong><ul>
-<li><code>list</code>: a list of zero or more LPeg patterns or values which can be fed to <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#lpeg">lpeg.P</a>.</li></ul>
+<li><code>t</code>: a table with LPeg patterns as values. The keys are ignored.</li></ul>
 <p/>
 <strong>Returns:</strong><ul>
 <li>a pattern which matches any of the patterns received.</li></ul></ul>
+	
+		<p/><a name="function_anywhere"></a>
+		<hr/><code><big>anywhere (patt)</big></code>
+		<ul>Returns a pattern which searches for the pattern <code>patt</code> anywhere in a string.
+<p/>
+This code was extracted from the <a href="http://www.inf.puc-rio.br/~roberto/lpeg.html#ex">LPeg home page</a>, in the examples section.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>patt</code>: a LPeg pattern.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a LPeg pattern which searches for <code>patt</code> anywhere in the string.</li></ul></ul>
 	
 		<p/><a name="function_apply"></a>
 		<hr/><code><big>apply (grammar, rules, captures)</big></code>
@@ -370,7 +415,7 @@ The printed result is:
 <p/>
 <code>rules</code> can either be:<ul>
 <li>a single pattern, which is taken to be the new initial rule, </li>
-<li>a possibly incomplete LPeg grammar, as per <a href="#function_complete">complete</a>, or </li>
+<li>a possibly incomplete LPeg grammar table, as per <a href="#function_complete">complete</a>, or </li>
 <li><code>nil</code>, which means no new rules are added.</li></ul>
 <p/>
 <code>captures</code> can either be:<ul>
@@ -445,6 +490,19 @@ The printed result is:
 <strong>Returns:</strong><ul>
 <li>the following pattern: <pre class="example">patt * (sep * patt)^<font color="#B00000"><i>0</i></font></pre></li></ul></ul>
 	
+		<p/><a name="function_oneOf"></a>
+		<hr/><code><big>oneOf (list)</big></code>
+		<ul>Returns a pattern which matches any of the patterns in <code>list</code>.
+<p/>
+Differently from <a href="#function_anyOf">anyOf</a>, this function ensures sequential 
+traversing.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>list</code>: a list of LPeg patterns.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a pattern which matches any of the patterns received.</li></ul></ul>
+	
 		<p/><a name="function_pipe"></a>
 		<hr/><code><big>pipe (dest, orig)</big></code>
 		<ul><a href="#section_Piping">Pipes</a> the captures in <code>orig</code> to the ones in <code>dest</code>.
@@ -457,6 +515,18 @@ The printed result is:
 <p/>
 <strong>Returns:</strong><ul>
 <li><code>dest</code>, suitably modified.</li></ul></ul>
+	
+		<p/><a name="function_pmatch"></a>
+		<hr/><code><big>pmatch (patt)</big></code>
+		<ul>Returns a pattern which simply fails to match if an error is thrown during the matching.
+<p/>
+One usage example is <a href="parser.html#variable_NUMBER">parser.NUMBER</a>. Originally it threw an error when trying to match a malformed number (such as 1e23e4), since in this case the input is obviously invalid and the pattern would be part of the Lua grammar. So <a href="#function_pmatch">pmatch</a> is used to catch the error and return <code>nil</code> (signalling a non-match) and the error message.
+<p/>
+<strong>Parameters:</strong><ul>
+<li><code>patt</code>: a LPeg pattern.</li></ul>
+<p/>
+<strong>Returns:</strong><ul>
+<li>a pattern which catches any errors thrown during the matching and simply doesn't match instead of propagating the error.</li></ul></ul>
 	
 	<hr/>
 

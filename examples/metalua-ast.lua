@@ -5,7 +5,7 @@
 --
 -- Author: Humberto Anjos (the code below) and Fabien Fleutot (the AST design)
 -- 
--- $Id: metalua-ast.lua,v 1.2 2007/12/03 20:46:16 hanjos Exp $
+-- $Id: metalua-ast.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
@@ -29,7 +29,6 @@ local unpack    = unpack
 -- imported modules
 local parser  = require 'leg.parser'
 local grammar = require 'leg.grammar'
-local scanner = require 'leg.scanner'
 
 local lpeg = require 'lpeg'
 
@@ -440,7 +439,7 @@ captures = {
   TRUE    = builder.True,
   FALSE   = builder.False,
   NUMBER  = function (num) return builder.Number(tonumber(num)) end,
-  STRING  = function (str) return builder.String(scanner.string2text(str)) end,
+  STRING  = function (str) return builder.String(parser.string2text(str)) end,
   ID      = grammar.C,
   Name    = builder.Id,
   ['...'] = builder.Dots,
@@ -481,7 +480,7 @@ local function ast2string(t, ...)
   end
   local function valid_id(x)
     -- FIXME: we should also reject keywords.
-    return type(x) == "string" and scanner.IDENTIFIER:match(x)
+    return type(x) == "string" and parser.IDENTIFIER:match(x)
   end
   local function shallowcopy(t)
     local newt = {}

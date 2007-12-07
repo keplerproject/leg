@@ -5,7 +5,7 @@
 --
 -- Authors: Humberto Anjos and Francisco Sant'Anna
 -- 
--- $Id: comment-extraction.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+-- $Id: comment-extraction.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 --
 -------------------------------------------------------------------------------
 
@@ -13,7 +13,6 @@
 local lpeg = require 'lpeg'
 
 local parser  = require 'leg.parser'
-local scanner = require 'leg.scanner'
 local grammar = require 'leg.grammar'
 
 -- some aliasing
@@ -60,7 +59,7 @@ subject = args[1] or [=[
 -- Let's define some patterns to simplify our job:
 
 -- spacing rule
-local S = scanner.SPACE ^ 0
+local S = parser.SPACE ^ 0
 
 -- matches any Lua statement, no captures
 Stat = P( parser.apply(V'Stat', nil) )
@@ -79,13 +78,13 @@ captures = {
   
   FuncName  = grammar.C, -- capture the raw text
   ParList   = grammar.C, -- capture the raw text
-  COMMENT   = scanner.comment2text, -- extract comment trappings
+  COMMENT   = parser.comment2text, -- extract comment trappings
 }
 
 -- the rules table
 rules = {
   [1] = ((V'COMMENT' *S) ^ 0) *S* V'GlobalFunction', -- new initial rule
-  COMMENT = scanner.COMMENT, -- just to add COMMENT's capture to the capture table
+  COMMENT = parser.COMMENT, -- just to add COMMENT's capture to the capture table
 }
 
 -- building the new grammar and adding the captures. This pattern will match
@@ -98,7 +97,7 @@ commentedFunc = P( grammar.apply(parser.rules, rules, captures) )
 -- finally, this pattern matches all commented global functions, Stats 
 -- or any other Lua tokens and packages the results in a table. This is done
 -- to capture only global function declarations in the global scope.
-patt = (commentedFunc + Stat + scanner.ANY)^0 / function(...) 
+patt = (commentedFunc + Stat + parser.ANY)^0 / function(...) 
   return table.concat({...}, '\n\n') -- some line breaks for easier reading
 end
 

@@ -5,7 +5,7 @@
 --
 -- Author: Humberto Anjos
 --
--- $Id: vararg-indexing.lua,v 1.2 2007/11/19 13:34:47 hanjos Exp $
+-- $Id: vararg-indexing.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 -- 
 -------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ subject = args[1] or [=[
 ]=]
 
 -- spacing rule
-local S = parser.rules.IGNORED -- scanner.IGNORED or V'IGNORED' could be used
+local S = parser.rules.IGNORED -- V'IGNORED' could be used
 
 -- a pattern which matches any instance of ...[<exp>] and returns 
 -- 'select(<Exp>, ...)'. You need parser.apply because the definition of Exp is
