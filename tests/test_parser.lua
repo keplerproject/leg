@@ -85,7 +85,7 @@ TEST('STRING', { "'What a pity...'",
   '"What a \\"pity\\"..."',
   '"What a \'pity\'..."',
   "[[If not for you...]]",
-  "[[something\n\or\nanother]]",
+  "[[something\nor\nanother]]",
   "[=[fantasy for sale [[that's entertainment!]]]=]",
   "[[Package it like a \"rebel\" or a 'hero']]",
   "![=[[[Reality]] withdraws"
