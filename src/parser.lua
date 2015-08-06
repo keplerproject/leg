@@ -173,6 +173,7 @@ local V, P, S, R, Cs = m.V, m.P, m.S, m.R, m.Cs
 local _M = {} -- the leg.parser module
 
 local apply, check, comment2text, text2comment, string2text, text2string
+local NUMBER, STRING, COMMENT, BOF, EOF, BANG, SPACE, IGNORED, IDENTIFIER, KEYWORD, SYMBOL, TOKEN, ANY 
 
 ----------------------------- HELPER FUNCTIONS --------------------------------
 
@@ -222,6 +223,7 @@ end
 -- throws an error if the grammar rule `rule` doesn't match
 -- `desc` is there for a slightly better error message
 local function CHECK(rule, desc)
+  local patt
   patt, desc = V(rule), desc or 'chunk'
   
   return patt + P(function (s, i)
@@ -396,7 +398,7 @@ local _, listOf, anyOf =
 A table holding the Lua 5.1 grammar. See [#section_The_Grammar The Grammar] for an extended explanation.
 --]]
 -- <% exp = 'table' %>
-rules = {
+local rules = {
 	  IGNORED = IGNORED  -- seen as _ below
 	, EPSILON = P(true)
   , EOF     = EOF
@@ -732,5 +734,20 @@ _M.comment2text		= comment2text
 _M.text2comment		= text2comment
 _M.string2text		= string2text
 _M.text2string		= text2string
+
+_M.NUMBER = NUMBER
+_M.STRING = STRING
+_M.COMMENT = COMMENT
+_M.BOF = BOF
+_M.EOF = EOF
+_M.BANG = BANG
+_M.SPACE = SPACE
+_M.IGNORED = IGNORED
+_M.IDENTIFIER = IDENTIFIER
+_M.KEYWORD = KEYWORD
+_M.SYMBOL = SYMBOL
+_M.TOKEN = TOKEN
+_M.ANY = ANY
+_M.rules = rules
 
 return _M
