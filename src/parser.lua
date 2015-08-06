@@ -169,7 +169,10 @@ local grammar = require 'leg.grammar'
 local V, P, S, R, Cs = m.V, m.P, m.S, m.R, m.Cs
 
 -- module declaration
-module 'leg.parser'
+--module 'leg.parser'
+local _M = {} -- the leg.parser module
+
+local apply, check, comment2text, text2comment, string2text, text2string
 
 ----------------------------- HELPER FUNCTIONS --------------------------------
 
@@ -723,3 +726,11 @@ function text2string(text)
   return '"'..patt:match(text)..'"'
 end
 
+_M.apply		= apply
+_M.check		= check
+_M.comment2text		= comment2text
+_M.text2comment		= text2comment
+_M.string2text		= string2text
+_M.text2string		= text2string
+
+return _M
