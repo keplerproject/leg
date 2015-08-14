@@ -12,6 +12,7 @@
 -- ye olde imports
 local lpeg = require 'lpeg'
 
+require "leg" -- check if available (and preload leg submodules)
 local parser = require 'leg.parser'
 
 -- some aliasing to save my poor fingertips

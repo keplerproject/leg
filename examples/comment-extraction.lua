@@ -12,6 +12,7 @@
 -- some imports to get things started.
 local lpeg = require 'lpeg'
 
+require "leg" -- check if available (and preload leg submodules)
 local parser  = require 'leg.parser'
 local grammar = require 'leg.grammar'
 
@@ -27,7 +28,7 @@ local args = { ... }
 --
 
 -- the code to parse
-subject = args[1] or [=[
+local subject = args[1] or [=[
   -- Calculates the sum a+b. 
   -- An extra line.
   function sum (a, b)

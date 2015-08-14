@@ -20,10 +20,13 @@
 -- 
 -------------------------------------------------------------------------------
 
+
+local lpeg = require 'lpeg'
+
+require "leg" -- check if available (and preload leg submodules)
 -- imported modules
 local parser = require 'leg.parser'
 
-local lpeg = require 'lpeg'
 
 -- imported functions
 local P = lpeg.P
