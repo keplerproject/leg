@@ -170,7 +170,7 @@ local V, P, S, R, Cs = m.V, m.P, m.S, m.R, m.Cs
 
 -- module declaration
 --module 'leg.parser'
-local _M = {} -- the leg.parser module
+local parser = {} -- the leg.parser module
 
 local apply, check, comment2text, text2comment, string2text, text2string
 local NUMBER, STRING, COMMENT, BOF, EOF, BANG, SPACE, IGNORED, IDENTIFIER, KEYWORD, SYMBOL, TOKEN, ANY 
@@ -728,26 +728,26 @@ function text2string(text)
   return '"'..patt:match(text)..'"'
 end
 
-_M.apply		= apply
-_M.check		= check
-_M.comment2text		= comment2text
-_M.text2comment		= text2comment
-_M.string2text		= string2text
-_M.text2string		= text2string
+parser.apply			= apply
+parser.check			= check
+parser.comment2text		= comment2text
+parser.text2comment		= text2comment
+parser.string2text		= string2text
+parser.text2string		= text2string
 
-_M.NUMBER = NUMBER
-_M.STRING = STRING
-_M.COMMENT = COMMENT
-_M.BOF = BOF
-_M.EOF = EOF
-_M.BANG = BANG
-_M.SPACE = SPACE
-_M.IGNORED = IGNORED
-_M.IDENTIFIER = IDENTIFIER
-_M.KEYWORD = KEYWORD
-_M.SYMBOL = SYMBOL
-_M.TOKEN = TOKEN
-_M.ANY = ANY
-_M.rules = rules
+parser.NUMBER = NUMBER
+parser.STRING = STRING
+parser.COMMENT = COMMENT
+parser.BOF = BOF
+parser.EOF = EOF
+parser.BANG = BANG
+parser.SPACE = SPACE
+parser.IGNORED = IGNORED
+parser.IDENTIFIER = IDENTIFIER
+parser.KEYWORD = KEYWORD
+parser.SYMBOL = SYMBOL
+parser.TOKEN = TOKEN
+parser.ANY = ANY
+parser.rules = rules
 
-return _M
+return parser
