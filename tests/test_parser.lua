@@ -5,7 +5,7 @@
 -- Copyright (c) 2007 Leg
 --
 -- $Id: test_parser.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
--- 
+--
 -------------------------------------------------------------------------------
 
 local lpeg    = require 'lpeg'
@@ -14,30 +14,30 @@ local parser  = require 'leg.parser'
 local function TEST (rule, tests)
 	io.write(string.format("%-26s", 'Testing '..rule..': ')) io.flush()
 	local G = lpeg.P( parser.apply(lpeg.V(rule)) )
-	
+
 	for i, subject in ipairs(tests) do
     local limit
     if type(subject) == 'table' then
       subject, limit = subject[1], subject[2]
     end
-    
+
     io.write(i..'... ') io.flush()
-      
+
     if string.sub(subject, 1, 1) == '!' then
       subject = string.sub(subject, 2)
-      
-      local G = G * function(subject) 
+
+      local G = G * function(subject)
           print()
           error('"'..subject..'": should not match')
         end
-      
+
       G:match(subject)
     else
-      local G = G + function(subject) 
+      local G = G + function(subject)
           print()
           error('"'..subject..'": should match')
         end
-      
+
       if limit then
         local actualMatch = G:match(subject)
         assert(actualMatch == limit, '"'..subject:sub(1, actualMatch)..'" is not the right match for "'..subject:sub(1, limit)..'"!')
@@ -46,53 +46,53 @@ local function TEST (rule, tests)
       end
     end
 	end
-	
+
 	print'OK!'
 end
 
 -- Lexical patterns
 TEST('ID', { '!and', { 'andale', 7 }, { 'make-name', 5 }, { 'one two three', 4 }, '!!name$', { 'aãoéç', 6 }, { '_123', 5 }, '!1abc', { 'abc1234', 8 }, { '___', 4 }, { '\127\128\129ç', 5 }})
 
-TEST('Symbol', { '+', '-', '*', '/', '^', '%', '..', '<', '<=', '>', '>=', 
+TEST('Symbol', { '+', '-', '*', '/', '^', '%', '..', '<', '<=', '>', '>=',
   '==', '~=', '!@', '!$' } )
-  
-TEST('NUMBER', { '465', 
-  '001234567890', 
-  '.123', 
-  '1.', 
-  '12.343', 
-  '0x7a2fF', 
-  '!ff', 
-  '1e-23', 
-  '9.045e+3', 
-  '.00678e2', 
-  '!1.23e4e5', 
-  '!-.1', 
+
+TEST('NUMBER', { '465',
+  '001234567890',
+  '.123',
+  '1.',
+  '12.343',
+  '0x7a2fF',
+  '!ff',
+  '1e-23',
+  '9.045e+3',
+  '.00678e2',
+  '!1.23e4e5',
+  '!-.1',
   '!123and' })
-  
-TEST('STRING', { "'What a pity...'", 
-  "'What \065 \112\105\116\121...'", 
-  "!'what?", 
-  "!'what\n?'", 
-  "'what\\\n?'", 
-  "'What a \\'pity\\'...'", 
-  "'What a \"pity\"...'", 
-  '"What a pity..."', 
-  '"What \065 \112\105\116\121..."', 
-  '!"what?', 
-  '!"what\n?"', 
+
+TEST('STRING', { "'What a pity...'",
+  "'What \065 \112\105\116\121...'",
+  "!'what?",
+  "!'what\n?'",
+  "'what\\\n?'",
+  "'What a \\'pity\\'...'",
+  "'What a \"pity\"...'",
+  '"What a pity..."',
+  '"What \065 \112\105\116\121..."',
+  '!"what?',
+  '!"what\n?"',
   '"what\\\n?"',
-  '"What a \\"pity\\"..."', 
-  '"What a \'pity\'..."', 
+  '"What a \\"pity\\"..."',
+  '"What a \'pity\'..."',
   "[[If not for you...]]",
-  "[[something\n\or\nanother]]", 
-  "[=[fantasy for sale [[that's entertainment!]]]=]", 
+  "[[something\nor\nanother]]",
+  "[=[fantasy for sale [[that's entertainment!]]]=]",
   "[[Package it like a \"rebel\" or a 'hero']]",
   "![=[[[Reality]] withdraws"
   })
 
-TEST('COMMENT', { { '-- single line comment\nsome code here', 23 }, 
-  '-- she can manipulate reactions', 
+TEST('COMMENT', { { '-- single line comment\nsome code here', 23 },
+  '-- she can manipulate reactions',
   '--[[superconductor!\nThat\'s entertainment!]]',
   '--[[superconductor!\nThat\'s entertainment!\n--]]',
   '!--[[<waiting for The Clansman to start>',

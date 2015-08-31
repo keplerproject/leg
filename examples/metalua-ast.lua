@@ -26,6 +26,7 @@ local tonumber  = tonumber
 local type      = type
 local unpack    = unpack
 
+require "leg" -- check if available (and preload leg submodules)
 -- imported modules
 local parser  = require 'leg.parser'
 local grammar = require 'leg.grammar'

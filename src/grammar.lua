@@ -204,7 +204,9 @@ local lpeg = require 'lpeg'
 local P, V = lpeg.P, lpeg.V
 
 -- module declaration
-module 'leg.grammar'
+local grammar = {} -- the leg.grammar module
+
+local anyOf, oneOf, listOf, anywhere, C, Ct, copy, complete, pipe, apply, pmatch
 
 --[[ 
 Returns a pattern which matches any of the patterns in `t`.
@@ -453,3 +455,17 @@ function pmatch(patt)
     end
   end)
 end
+
+grammar.anyOf		= anyOf
+grammar.oneOf		= oneOf
+grammar.listOf		= listOf
+grammar.anywhere	= anywhere
+grammar.C		= C
+grammar.Ct		= Ct
+grammar.copy		= copy
+grammar.complete	= complete
+grammar.pipe		= pipe
+grammar.apply		= apply
+grammar.pmatch		= pmatch
+
+return grammar

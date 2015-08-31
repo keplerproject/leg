@@ -15,6 +15,7 @@
 -- imports
 local lpeg = require 'lpeg'
 
+require "leg" -- check if available (and preload leg submodules)
 local parser = require 'leg.parser'
 
 -- aliasing

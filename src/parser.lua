@@ -169,7 +169,11 @@ local grammar = require 'leg.grammar'
 local V, P, S, R, Cs = m.V, m.P, m.S, m.R, m.Cs
 
 -- module declaration
-module 'leg.parser'
+--module 'leg.parser'
+local parser = {} -- the leg.parser module
+
+local apply, check, comment2text, text2comment, string2text, text2string
+local NUMBER, STRING, COMMENT, BOF, EOF, BANG, SPACE, IGNORED, IDENTIFIER, KEYWORD, SYMBOL, TOKEN, ANY 
 
 ----------------------------- HELPER FUNCTIONS --------------------------------
 
@@ -219,6 +223,7 @@ end
 -- throws an error if the grammar rule `rule` doesn't match
 -- `desc` is there for a slightly better error message
 local function CHECK(rule, desc)
+  local patt
   patt, desc = V(rule), desc or 'chunk'
   
   return patt + P(function (s, i)
@@ -393,7 +398,7 @@ local _, listOf, anyOf =
 A table holding the Lua 5.1 grammar. See [#section_The_Grammar The Grammar] for an extended explanation.
 --]]
 -- <% exp = 'table' %>
-rules = {
+local rules = {
 	  IGNORED = IGNORED  -- seen as _ below
 	, EPSILON = P(true)
   , EOF     = EOF
@@ -723,3 +728,26 @@ function text2string(text)
   return '"'..patt:match(text)..'"'
 end
 
+parser.apply			= apply
+parser.check			= check
+parser.comment2text		= comment2text
+parser.text2comment		= text2comment
+parser.string2text		= string2text
+parser.text2string		= text2string
+
+parser.NUMBER = NUMBER
+parser.STRING = STRING
+parser.COMMENT = COMMENT
+parser.BOF = BOF
+parser.EOF = EOF
+parser.BANG = BANG
+parser.SPACE = SPACE
+parser.IGNORED = IGNORED
+parser.IDENTIFIER = IDENTIFIER
+parser.KEYWORD = KEYWORD
+parser.SYMBOL = SYMBOL
+parser.TOKEN = TOKEN
+parser.ANY = ANY
+parser.rules = rules
+
+return parser

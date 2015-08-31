@@ -41,8 +41,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 -- $Id: init.lua,v 1.3 2007/12/07 14:23:56 hanjos Exp $
 
-require 'leg.grammar'
-require 'leg.scanner'
-require 'leg.parser'
+local grammar = require 'leg.grammar'
+local parser = require 'leg.parser'
 
-module 'leg'
+return {
+	grammar = grammar,
+	parser = parser,
+}
+
